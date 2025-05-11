@@ -46,38 +46,16 @@ class CbrUpdated():
         return model
     
     def retornarSimilares(self, registro):
-        try:
-            if isinstance(registro, pd.DataFrame):
-                query = registro
-            elif hasattr(registro, 'shape') and len(registro.shape) == 3:
-                query = pd.DataFrame(registro.reshape(registro.shape[0], -1))
-            elif hasattr(registro, 'shape') or hasattr(registro, '__len__'):
-                try:
-                    flat_registro = np.array(registro).flatten()
-                    query = pd.DataFrame([flat_registro])
-                except:
-                    query = pd.DataFrame([registro])
-            else:
-                query = pd.DataFrame([registro])
-        except Exception as e:
-            print(f"Error converting registro to DataFrame: {e}")
-            print(f"Registro type: {type(registro)}, shape (if applicable): {getattr(registro, 'shape', 'N/A')}")
-            return pd.DataFrame()
+        distancias, indices = self.model.kneighbors(registro)
+        indices = indices[0]
+        jogadas_similares = self.casos.iloc[indices]
+
+        # Novo filtro: apenas mãos com o mesmo número de vitórias para o robô ou jogador
+        jogadas_similares = jogadas_similares[
+            (jogadas_similares[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 1).sum(), axis=1) ==
+             registro[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 1).sum(), axis=1).iloc[0]) |
+            (jogadas_similares[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 2).sum(), axis=1) ==
+             registro[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 2).sum(), axis=1).iloc[0])
+        ]
         
-        try:
-            distancias, indices = self.model.kneighbors(query)
-            indices = indices[0]
-            
-            jogadas_similares = self.casos.iloc[indices]
-            
-            jogadas_vencidas = jogadas_similares[
-                ((jogadas_similares.ganhadorPrimeiraRodada == 2) & (jogadas_similares.ganhadorSegundaRodada == 2)) | 
-                ((jogadas_similares.ganhadorPrimeiraRodada == 2) & (jogadas_similares.ganhadorTerceiraRodada == 2)) | 
-                ((jogadas_similares.ganhadorSegundaRodada == 2) & (jogadas_similares.ganhadorTerceiraRodada == 2))
-            ]
-            
-            return jogadas_vencidas
-        except Exception as e:
-            print(f"Error in finding similar cases: {e}")
-            print(f"Query shape: {query.shape}")
-            return pd.DataFrame()
+        return jogadas_similares
