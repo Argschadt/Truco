@@ -28,7 +28,7 @@ class Jogo():
         # print(str(carta1.numero))
         # print(str(carta2.numero))
         ganhador = self.verificarCartaVencedora(carta1, carta2)
-        print(ganhador)
+        #print(ganhador)
         return ganhador
         # if self.verificarCartaVencedora(carta1, carta2) is None:
         #     if carta1.numero == carta2.numero:

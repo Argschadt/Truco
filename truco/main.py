@@ -167,7 +167,7 @@ if __name__ == '__main__':
                     # limpar()
                     # print(f"\n{jogador1.nome} jogou a carta: ")
                     # carta_jogador_01.printarCarta(carta_escolhida)
-                    print(f'carta escolhida {carta_escolhida} \n carta_jogador_01 {carta_jogador_01}')
+                    # print(f'carta escolhida {carta_escolhida} \n carta_jogador_01 {carta_jogador_01}')
                     pontos_truco = jogo.retornaTrucoPontos()
                     break
 
