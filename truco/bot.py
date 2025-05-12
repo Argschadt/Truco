@@ -46,7 +46,12 @@ class Bot():
                 carta_escolhida = aux
 
         if(carta_escolhida == 0):
-            valor_referencia = df[ordem_carta_jogada].value_counts().index.to_list()[0]
+            valores = df[ordem_carta_jogada].value_counts().index.to_list()
+            if valores:
+                valor_referencia = valores[0]
+            else:
+                # Valor padrão caso não haja valores (exemplo: escolha aleatória)
+                valor_referencia = 0  # ou outra lógica apropriada
             carta_escolhida = min(self.pontuacaoCartas, key=lambda x:abs(x-valor_referencia))
 
         indice = self.pontuacaoCartas.index(carta_escolhida)
@@ -125,4 +130,3 @@ class Bot():
 
 
     # def caseBasedReasoning(self):
-        

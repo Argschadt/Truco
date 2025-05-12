@@ -41,7 +41,7 @@ class CbrUpdated():
         return df
 
     def criarModelo(self):
-        model = NearestNeighbors(n_neighbors=100, algorithm='auto', metric='euclidean')
+        model = NearestNeighbors(n_neighbors=20, algorithm='auto', metric='euclidean')
         model.fit(self.casos)
         return model
     
@@ -57,5 +57,11 @@ class CbrUpdated():
             (jogadas_similares[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 2).sum(), axis=1) ==
              registro[['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']].apply(lambda x: (x == 2).sum(), axis=1).iloc[0])
         ]
+
+        # Ordenar pelas jogadas em que o robô venceu mais rodadas
+        jogadas_similares['vitorias_robo'] = jogadas_similares[
+            ['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']
+        ].apply(lambda x: (x == 1).sum(), axis=1)
+        jogadas_similares = jogadas_similares.sort_values(by='vitorias_robo', ascending=False)
         
         return jogadas_similares

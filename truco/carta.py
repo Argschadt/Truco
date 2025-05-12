@@ -46,10 +46,10 @@ class Carta():
             elif MANILHA[str(carta_02.numero)+" de "+carta_02.naipe] > MANILHA[str(carta_01.numero)+" de "+carta_01.naipe]:
                 return carta_02
         elif (str(carta_01.numero)+" de "+carta_01.naipe) in MANILHA:
-            print('in manilha')
+            #print('in manilha')
             return carta_01
         elif (str(carta_02.numero)+" de "+carta_02.naipe) in MANILHA:
-            print('in manilha')
+            #print('in manilha')
             return carta_02
         else:
             if CARTAS_VALORES[str(carta_01.numero)] > CARTAS_VALORES[str(carta_02.numero)]:
