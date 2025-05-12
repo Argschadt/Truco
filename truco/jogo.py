@@ -24,39 +24,18 @@ class Jogo():
         return bot
 
     def verificarGanhador(self, carta1, carta2):
-        # print("numeros: ")
-        # print(str(carta1.numero))
-        # print(str(carta2.numero))
         ganhador = self.verificarCartaVencedora(carta1, carta2)
-        #print(ganhador)
         return ganhador
-        # if self.verificarCartaVencedora(carta1, carta2) is None:
-        #     if carta1.numero == carta2.numero:
-        #         ganhador = "Empate"
-        #     elif CARTAS_VALORES[str(carta1.numero)] > CARTAS_VALORES[str(carta2.numero)]:
-        #         ganhador = carta1
-        #     else:
-        #         ganhador = carta2
-        #     print(ganhador)
-        #     return ganhador
-        # else:
-        #     return self.verificarCartaVencedora(carta1, carta2)
 
     
     def adicionarPonto(self, jogador1, jogador2, carta1, carta2, ganhador):
         if ganhador == "Empate":
-            # jogador1.adicionarPonto()
-            # jogador2.adicionarPonto()
             return "Empate"
         
         elif ganhador == carta1:
             jogador1.adicionarPonto()
-            ganhador.printarCarta()
-        
         elif ganhador == carta2:
             jogador2.adicionarPonto()
-            ganhador.printarCarta()
-        
         else:
             return "Erro"
 

@@ -18,7 +18,7 @@ def reiniciarJogo():
     jogo.resetarTrucoPontos()
 
 def limpar():
-    os.system("clear")
+    os.system("cls")
 
 def border_msg(msg, indent=1, width=None, title=None):
     """Print message-box with optional title."""
@@ -103,13 +103,11 @@ if __name__ == '__main__':
     nome = str(input("Nome Jogador 2: "))
     jogador2 = jogo.criarBot(nome, baralho)
 
-    # limpar()
-
     while True:
         carta_escolhida = 6
         truco_fugiu = False
         ocultar_rodadas = False
-        # jogo.resetarTrucoPontos()
+        
         #Sorteio pra ver quem joga na primeira rodada
         if jogador1.rodadas == 0 and jogador2.rodadas == 0:
             if jogador1.pontos == 0 and jogador2.pontos == 0:
@@ -120,12 +118,13 @@ if __name__ == '__main__':
                     jogador1.ultimo = False
                     jogador2.primeiro = False
                     jogador2.ultimo = True
+                    print(f"Primeiro a jogar: {jogador1.nome}\n")
                 elif sorteado == "jogador2":
                     jogador2.primeiro = True
                     jogador2.ultimo = False
                     jogador1.primeiro = False
                     jogador1.ultimo = True
-            print(f"Sorteio pra ver quem joga na primeira rodada\n Ganhador: {sorteado}")
+                    print(f"Primeiro a jogar: {jogador2.nome}\n")
 
         if jogador1.primeiro == True:
             while (carta_escolhida > len(jogador1.checaMao()) or int(carta_escolhida) <= 1):
@@ -159,7 +158,6 @@ if __name__ == '__main__':
             carta1 = Carta(carta_jogador_01.retornarNumero(), carta_jogador_01.retornarNaipe())
         
         ganhador = jogo.verificarGanhador(carta1, carta2)
-        print("\nCarta ganhadora: ")
         jogo.quemJogaPrimeiro(jogador1, jogador2, carta1, carta2, ganhador)
         jogo.adicionarPonto(jogador1, jogador2, carta1, carta2, ganhador)
             
@@ -176,6 +174,7 @@ if __name__ == '__main__':
                 reiniciarJogo()
 
             print(jogador1.rodadas)
+            limpar()
             border_msg(f"Jogador 1 - {jogador1.nome}: {jogador1.rodadas} Pontos Acumulados\nJogador 2 - {jogador2.nome}: {jogador2.rodadas} Pontos Acumulados")
             
         # Testar situação corrigida: empate em 2 rodadas, e o jogo trava sem possibidade de fazer mais nada.
