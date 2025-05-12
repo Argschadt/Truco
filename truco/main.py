@@ -76,39 +76,9 @@ def aumentarTruco(quemPediu):
                 return
 
 def chamarJogadasBot():
-    print(f"\n<< {jogador2.nome} - Jogador 2 >>")
-    # jogador2.mostrarMao()
-    # carta_escolhida = int(input(f"\n{jogador2.nome} Qual carta você quer jogar? "))
     carta_jogador_02 = jogador2.jogarCarta(cbr)
-    # limpar()
-
-    # elif jogador2.primeiro == True:
-    #     print(f"\n<< {jogador2.nome} - Jogador 2 >>")
-    #     jogador2.mostrarMao()
-    #     # carta_escolhida = int(input(f"\n{jogador2.nome} Qual carta você quer jogar? "))
-    #     carta_jogador_02 = jogador2.jogarCarta()
-    #     # limpar()
-    #     print(f"\n{jogador2.nome} jogou a carta: ")
-    #     carta_jogador_02.printarCarta(carta_jogador_02)
-
-    #     print(f"\n<< {jogador1.nome} - Jogador 1 >>")
-    #     jogador1.mostrarOpcoes()
-    #     carta_escolhida = int(input(f"\n{jogador1.nome} Qual carta você quer jogar? "))
-    #     carta_jogador_01 = jogador1.jogarCarta(carta_escolhida)
-    #     # limpar()
-    #     print(f"\n{jogador1.nome} jogou a carta: ")
-    #     carta_jogador_01.printarCarta(carta_escolhida)
-    # else:
-    #     print("Erro")
-
-    # limpar()
-
-    #print(f"\n>> {jogador1.nome} jogou a carta: ")
-    #carta_jogador_01.printarCarta()
     print(f">> {jogador2.nome} jogou a carta: ")
     carta_jogador_02.printarCarta()
-
-    #carta1 = Carta(carta_jogador_01.retornarNumero(), carta_jogador_01.retornarNaipe())
     carta2 = Carta(carta_jogador_02.retornarNumero(), carta_jogador_02.retornarNaipe())
 
     return carta2
@@ -155,7 +125,7 @@ if __name__ == '__main__':
                     jogador2.ultimo = False
                     jogador1.primeiro = False
                     jogador1.ultimo = True
-        print(f"Sorteio pra ver quem joga na primeira rodada\n Ganhador: {sorteado}")
+            print(f"Sorteio pra ver quem joga na primeira rodada\n Ganhador: {sorteado}")
 
         if jogador1.primeiro == True:
             while (carta_escolhida > len(jogador1.checaMao()) or int(carta_escolhida) <= 1):
@@ -172,8 +142,6 @@ if __name__ == '__main__':
             carta1 = Carta(carta_jogador_01.retornarNumero(), carta_jogador_01.retornarNaipe())
             if (truco_fugiu is False):
                 carta2 = chamarJogadasBot()
-                ganhador = jogo.verificarGanhador(carta1, carta2)
-                print("\nCarta ganhadora: ")
                     
         if jogador2.primeiro == True:
             carta2 = chamarJogadasBot()
@@ -190,6 +158,8 @@ if __name__ == '__main__':
                     print('Selecione um valor válido!')
             carta1 = Carta(carta_jogador_01.retornarNumero(), carta_jogador_01.retornarNaipe())
         
+        ganhador = jogo.verificarGanhador(carta1, carta2)
+        print("\nCarta ganhadora: ")
         jogo.quemJogaPrimeiro(jogador1, jogador2, carta1, carta2, ganhador)
         jogo.adicionarPonto(jogador1, jogador2, carta1, carta2, ganhador)
             
