@@ -1,0 +1,201 @@
+import pandas as pd
+import numpy as np
+import cbrkit
+from pathlib import Path
+import functools
+import time
+
+class CbrUpdated():
+    def __init__(self):
+        self.indice = 0
+        self.casebase = self.atualizarDataframe()
+        self.query_cache = {}  # Cache para consultas
+        self.sim_cache = None  # Cache para a função de similaridade
+        self.retriever_cache = None  # Cache para o retriever
+
+    def codificarNaipe(self, naipe):
+        if naipe == 'ESPADAS':
+            return 1
+        
+        if naipe == 'OUROS':
+            return 2
+        
+        if naipe == 'BASTOS':
+            return 3
+        
+        if naipe == 'COPAS':
+            return 4
+
+    def gerar_novo_CSV(self):
+        df = pd.read_csv('../dbtrucoimitacao_maos.csv', index_col='idMao').fillna(0)
+        # Filtra apenas rodadas onde todas as rodadas foram ganhas pelo jogador 2
+        df = df[(df['ganhadorPrimeiraRodada'] == 2) & (df['ganhadorSegundaRodada'] == 2) & (df['ganhadorTerceiraRodada'] == 2)]
+        colunas_string = [
+            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo', 
+            'naipeCartaAltaHumano', 'naipeCartaMediaHumano', 'naipeCartaBaixaHumano',
+            'naipePrimeiraCartaRobo', 'naipePrimeiraCartaHumano', 'naipeSegundaCartaRobo', 
+            'naipeSegundaCartaHumano', 'naipeTerceiraCartaRobo', 'naipeTerceiraCartaHumano',
+        ]
+        colunas_int = [col for col in df.columns if col not in colunas_string]
+        df[colunas_int] = df[colunas_int].astype('int').apply(abs)
+        df.replace('ESPADAS', '1', inplace=True)
+        df.replace('OURO', '2', inplace=True)
+        df.replace('BASTOS', '3', inplace=True)
+        df.replace('COPAS', '4', inplace=True)
+        df[colunas_string] = df[colunas_string].astype('int')
+        df = df[(df >= 0).all(axis=1)]
+        
+        df.to_csv('../dbtrucoimitacao_maos_cbrkit.csv')
+        
+    def atualizarDataframe(self):
+        self.gerar_novo_CSV()
+        casebase = cbrkit.loaders.file(Path('../dbtrucoimitacao_maos_cbrkit.csv'))
+        return casebase
+    
+    def montar_query_do_registro(self, registro):
+        modelo = pd.read_csv('../modelo_registro.csv')
+        campos = [c for c in modelo.columns if c != 'idMao']  # Remove idMao da query
+        if hasattr(registro, 'to_dict'):
+            if hasattr(registro, 'iloc'):
+                registro_dict = registro.iloc[0].to_dict()
+            else:
+                registro_dict = registro.to_dict()
+        else:
+            registro_dict = dict(registro)
+        query = {campo: registro_dict.get(campo, 0) for campo in campos}
+        return query    
+    def retornarSimilares(self, registro):
+        # Gerar uma chave para o cache baseada em valores específicos do registro
+        if hasattr(registro, 'to_dict'):
+            if hasattr(registro, 'iloc'):
+                reg_dict = registro.iloc[0].to_dict()
+            else:
+                reg_dict = registro.to_dict()
+        else:
+            reg_dict = dict(registro)
+        
+        # Criar uma chave de cache a partir dos valores mais significativos
+        cache_key = tuple(sorted([
+            (k, v) for k, v in reg_dict.items() 
+            if k in ['cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo', 
+                    'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']
+        ]))
+        
+        # Verificar se já temos um resultado em cache
+        if cache_key in self.query_cache:
+            print("Usando resultado em cache")
+            return self.query_cache[cache_key]
+        
+        # Obtendo ou inicializando o similarty function do cache
+        if self.sim_cache is None:
+            start_time = time.time()
+            self.sim_cache = self.global_similarity()
+            print(f"Tempo para criar função de similaridade: {time.time() - start_time:.4f}s")
+        
+        # Obtendo ou inicializando o retriever do cache
+        if self.retriever_cache is None:
+            start_time = time.time()
+            self.retriever_cache = cbrkit.retrieval.build(self.sim_cache, limit=30)
+            print(f"Tempo para criar retriever: {time.time() - start_time:.4f}s")
+        
+        # Usando os objetos em cache
+        global_sim = self.sim_cache
+        retriever = self.retriever_cache
+        
+        start_time = time.time()
+        query = self.montar_query_do_registro(registro)
+        try:
+            result = cbrkit.retrieval.apply(self.casebase, query, retriever)
+            print(f"Tempo para cbrkit.retrieval.apply: {time.time() - start_time:.4f}s")
+        except IndexError as e:
+            print("ERRO: IndexError ao chamar o retrieval. O casebase está vazio ou a query não bate com os dados.")
+            print("Detalhes:", e)
+            return pd.DataFrame()
+
+        casebase_columns = [
+            'idMao','jogadorMao','cartaAltaRobo','cartaMediaRobo','cartaBaixaRobo','cartaAltaHumano','cartaMediaHumano','cartaBaixaHumano',
+            'primeiraCartaRobo','primeiraCartaHumano','segundaCartaRobo','segundaCartaHumano','terceiraCartaRobo','terceiraCartaHumano',
+            'ganhadorPrimeiraRodada','ganhadorSegundaRodada','ganhadorTerceiraRodada','quemPediuEnvido','quemPediuFaltaEnvido','quemPediuRealEnvido',
+            'pontosEnvidoRobo','pontosEnvidoHumano','quemNegouEnvido','quemGanhouEnvido','tentosEnvido','quemFlor','quemContraFlor','quemContraFlorResto',
+            'quemNegouFlor','pontosFlorRobo','pontosFlorHumano','quemGanhouFlor','tentosFlor','quemEscondeuPontosEnvido','quemEscondeuPontosFlor',
+            'quemTruco','quandoTruco','quemRetruco','quandoRetruco','quemValeQuatro','quandoValeQuatro','quemNegouTruco','quemGanhouTruco','tentosTruco',
+            'tentosAnterioresRobo','tentosAnterioresHumano','tentosPosterioresRobo','tentosPosterioresHumano','quemBaralho','quandoBaralho','quemContraFlorFalta',
+            'quemEnvidoEnvido','quemFlorFlor','quandoCartaVirada','naipeCartaAltaRobo','naipeCartaMediaRobo','naipeCartaBaixaRobo','naipeCartaAltaHumano',
+            'naipeCartaMediaHumano','naipeCartaBaixaHumano','naipePrimeiraCartaRobo','naipePrimeiraCartaHumano','naipeSegundaCartaRobo','naipeSegundaCartaHumano',
+            'naipeTerceiraCartaRobo','naipeTerceiraCartaHumano','quantidadeChamadasHumano','quantidadeChamadasRobo','qualidadeMaoRobo','qualidadeMaoHumano',
+            'quantidadeChamadasEnvidoRobo','quantidadeChamadasEnvidoHumano','saldoTruco','saldoEnvido','saldoFlor'
+        ]
+
+        if isinstance(result.casebase, dict):
+            if all(isinstance(v, list) for v in result.casebase.values()):
+                jogadas_similares_df = pd.DataFrame(result.casebase)
+            else:
+                jogadas_similares_df = pd.DataFrame([result.casebase])
+            if 'idMao' in jogadas_similares_df.columns:
+                jogadas_similares_df.set_index('idMao', inplace=True)
+            valid_indices = [i for i in result.ranking if i < len(jogadas_similares_df)]
+            jogadas_similares_df = jogadas_similares_df.iloc[valid_indices]
+        else:
+            valid_indices = [i for i in result.ranking if i < len(result.casebase)]
+            jogadas_similares_df = result.casebase.iloc[valid_indices]
+        for col in casebase_columns:
+            if col not in jogadas_similares_df.columns:
+                jogadas_similares_df[col] = 0
+        jogadas_similares_df = jogadas_similares_df[casebase_columns]
+        v1 = [query.get('ganhadorPrimeiraRodada', 0), query.get('ganhadorSegundaRodada', 0), query.get('ganhadorTerceiraRodada', 0)]
+        count1 = v1.count(1)
+        count2 = v1.count(2)
+        rodada_cols = ['ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada']
+        sum1 = (jogadas_similares_df[rodada_cols] == 1).sum(axis=1)
+        sum2 = (jogadas_similares_df[rodada_cols] == 2).sum(axis=1)
+        mask = (sum1 == count1) | (sum2 == count2)
+        jogadas_similares_df = jogadas_similares_df[mask]        jogadas_similares_df['vitorias_robo'] = (jogadas_similares_df[rodada_cols] == 1).sum(axis=1)
+        jogadas_similares_df = jogadas_similares_df.sort_values(by='vitorias_robo', ascending=False)
+        
+        # Armazenar no cache para futuras consultas
+        self.query_cache[cache_key] = jogadas_similares_df
+        return jogadas_similares_df
+      def global_similarity(self):
+        # Função de similaridade global baseada nos atributos mais relevantes
+        # Reduzindo o número de atributos comparados para melhorar performance
+        sim_fn = cbrkit.sim.attribute_value(
+            attributes={
+                # Cartas do robô - atributos essenciais
+                'cartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                'cartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                'cartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                
+                # Cartas do humano - atributos essenciais
+                'cartaAltaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                'cartaMediaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                'cartaBaixaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                
+                # Cartas jogadas - atributos essenciais
+                'primeiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                'primeiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                'segundaCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                'segundaCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                'terceiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
+                'terceiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                
+                # Resultado de cada rodada - atributos essenciais
+                'ganhadorPrimeiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
+                'ganhadorSegundaRodada': cbrkit.sim.numbers.linear(min=0, max=2),
+                'ganhadorTerceiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
+                
+                # Naipes das cartas mais importantes
+                'naipeCartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
+                'naipeCartaAltaHumano': cbrkit.sim.numbers.linear(min=1, max=4),
+                
+                # Alguns atributos de jogabilidade mais relevantes
+                'quemTruco': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemEnvidoEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+            },
+            types={
+                int: cbrkit.sim.numbers.linear(max=9999999),
+            },
+            aggregator=cbrkit.sim.aggregator("mean"),
+        )
+        return sim_fn
