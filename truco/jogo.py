@@ -9,6 +9,7 @@ class Jogo():
     def __init__(self):
         self.rodadas = []
         self.trucoPontos = 1
+        self.historico_rodadas = []  # Adicionado para controle do histórico das rodadas
     
     def iniciarJogo(self):
         pass
@@ -109,3 +110,6 @@ class Jogo():
     
     def resetarTrucoPontos(self):
         self.trucoPontos = 1
+
+    def resetarHistoricoRodadas(self):
+        self.historico_rodadas = []
