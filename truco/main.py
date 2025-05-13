@@ -162,8 +162,19 @@ if __name__ == '__main__':
         
         ganhador = jogo.verificarGanhador(carta1, carta2)
         jogo.quemJogaPrimeiro(jogador1, jogador2, carta1, carta2, ganhador)
-        jogo.adicionarPonto(jogador1, jogador2, carta1, carta2, ganhador)
-            
+        resultado_rodada = jogo.adicionarPonto(jogador1, jogador2, carta1, carta2, ganhador)
+        
+        # Controle de rodadas vencidas por cada jogador
+        if not hasattr(jogador1, 'rodadas_empate'):
+            jogador1.rodadas_empate = 0
+        if not hasattr(jogador2, 'rodadas_empate'):
+            jogador2.rodadas_empate = 0
+        
+        if resultado_rodada == "Empate":
+            print("Rodada empatada!")
+            jogador1.rodadas_empate += 1
+            jogador2.rodadas_empate += 1
+        
         if (jogador1.pontos == 2 or jogador2.pontos == 2):
             ocultar_rodadas = True
             if jogador1.pontos == 2:
@@ -177,30 +188,16 @@ if __name__ == '__main__':
                 reiniciarJogo()
 
             print(jogador1.rodadas)
-            limpar()
             border_msg(f"Jogador 1 - {jogador1.nome}: {jogador1.rodadas} Pontos Acumulados\nJogador 2 - {jogador2.nome}: {jogador2.rodadas} Pontos Acumulados")
-            
-        # Testar situação corrigida: empate em 2 rodadas, e o jogo trava sem possibidade de fazer mais nada.
-        if(not(jogador1.checaMao()) and not(jogador2.checaMao()) or truco_fugiu is True):
-            ocultar_rodadas = True
-            if truco_fugiu is True:
-                print(f'pontos truco:: {pontos_truco} | {jogo.retornaTrucoPontos()}')
-                jogador1.adicionarRodada(pontos_truco)
-                print(f"\n{jogador1.nome} ganhou a rodada")
-                reiniciarJogo()
-            
-            elif jogador1.pontos > jogador2.pontos:
-                jogador1.adicionarRodada(pontos_truco)
-                print(f"\n{jogador1.nome} ganhou a rodada")
-                reiniciarJogo()
-
-            elif jogador2.pontos > jogador1.pontos:
-                jogador2.adicionarRodada(pontos_truco)
-                print(f"\n{jogador2.nome} ganhou a rodada")
-                reiniciarJogo()
-            
-            border_msg(f"Jogador 1 - {jogador1.nome}: {jogador1.rodadas} Pontos Acumulados\nJogador 2 - {jogador2.nome}: {jogador2.rodadas} Pontos Acumulados")
-
+        
+        # Empate de mão: ambos venceram uma rodada e a terceira foi empate
+        if (not(jogador1.checaMao()) and not(jogador2.checaMao()) and jogador1.pontos == 1 and jogador2.pontos == 1):
+            print("\nA mão terminou empatada! Nenhum jogador recebe ponto de rodada.")
+            jogador1.rodadas_empate += 1
+            jogador2.rodadas_empate += 1
+            reiniciarJogo()
+            border_msg(f"Jogador 1 - {jogador1.nome}: {jogador1.rodadas} Pontos Acumulados\nJogador 2 - {jogador2.nome}: {jogador2.rodadas} Pontos Acumulados\nEmpates: {jogador1.rodadas_empate}")
+        
         if (ocultar_rodadas is False):
             border_msg(f"Jogador 1 - {jogador1.nome}: Venceu {jogador1.pontos} Rodada(s)\nJogador 2 - {jogador2.nome}: Venceu {jogador2.pontos} Rodada(s)")
 

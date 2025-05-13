@@ -30,6 +30,7 @@ class Jogo():
     
     def adicionarPonto(self, jogador1, jogador2, carta1, carta2, ganhador):
         if ganhador == "Empate":
+            # Não soma ponto para ninguém, apenas retorna Empate
             return "Empate"
         
         elif ganhador == carta1:
@@ -79,7 +80,7 @@ class Jogo():
             return carta_jogador_02
         
         else:
-            if CARTAS_VALORES[str(carta_jogador_01.numero)] >= CARTAS_VALORES[str(carta_jogador_02.numero)]:
+            if CARTAS_VALORES[str(carta_jogador_01.numero)] > CARTAS_VALORES[str(carta_jogador_02.numero)]:
                 return carta_jogador_01
         
             elif CARTAS_VALORES[str(carta_jogador_01.retornarNumero())] < CARTAS_VALORES[str(carta_jogador_02.retornarNumero())]:
