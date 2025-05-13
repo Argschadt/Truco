@@ -23,6 +23,8 @@ class CbrUpdated():
 
     def gerar_novo_CSV(self):
         df = pd.read_csv('../dbtrucoimitacao_maos.csv', index_col='idMao').fillna(0)
+        # Filtra apenas rodadas onde todas as rodadas foram ganhas pelo jogador 2
+        df = df[(df['ganhadorPrimeiraRodada'] == 2) & (df['ganhadorSegundaRodada'] == 2) & (df['ganhadorTerceiraRodada'] == 2)]
         colunas_string = [
             'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo', 
             'naipeCartaAltaHumano', 'naipeCartaMediaHumano', 'naipeCartaBaixaHumano',
@@ -45,9 +47,30 @@ class CbrUpdated():
         casebase = cbrkit.loaders.file(Path('../dbtrucoimitacao_maos_cbrkit.csv'))
         return casebase
     
+    def montar_query_do_registro(self, registro):
+        modelo = pd.read_csv('../modelo_registro.csv')
+        campos = [c for c in modelo.columns if c != 'idMao']  # Remove idMao da query
+        if hasattr(registro, 'to_dict'):
+            if hasattr(registro, 'iloc'):
+                registro_dict = registro.iloc[0].to_dict()
+            else:
+                registro_dict = registro.to_dict()
+        else:
+            registro_dict = dict(registro)
+        query = {campo: registro_dict.get(campo, 0) for campo in campos}
+        return query
+
     def retornarSimilares(self, registro):
         global_sim = self.global_similarity()
         retriever = cbrkit.retrieval.build(global_sim, limit=100)
+        query = self.montar_query_do_registro(registro)
+        try:
+            result = cbrkit.retrieval.apply(self.casebase, query, retriever)
+        except IndexError as e:
+            print("ERRO: IndexError ao chamar o retrieval. O casebase está vazio ou a query não bate com os dados.")
+            print("Detalhes:", e)
+            return pd.DataFrame()
+
         casebase_columns = [
             'idMao','jogadorMao','cartaAltaRobo','cartaMediaRobo','cartaBaixaRobo','cartaAltaHumano','cartaMediaHumano','cartaBaixaHumano',
             'primeiraCartaRobo','primeiraCartaHumano','segundaCartaRobo','segundaCartaHumano','terceiraCartaRobo','terceiraCartaHumano',
@@ -61,18 +84,7 @@ class CbrUpdated():
             'naipeTerceiraCartaRobo','naipeTerceiraCartaHumano','quantidadeChamadasHumano','quantidadeChamadasRobo','qualidadeMaoRobo','qualidadeMaoHumano',
             'quantidadeChamadasEnvidoRobo','quantidadeChamadasEnvidoHumano','saldoTruco','saldoEnvido','saldoFlor'
         ]
-        if hasattr(registro, 'to_dict'):
-            query = {k: (v if not isinstance(v, dict) else 0) for k, v in registro.to_dict().items() if k in casebase_columns}
-        else:
-            query = {k: (v if not isinstance(v, dict) else 0) for k, v in dict(registro).items() if k in casebase_columns}
-        query = {k: v for k, v in query.items() if isinstance(v, (int, float, str, bool, type(None)))}
-        # Pré-filtra o casebase pelo jogadorMao para acelerar
-        if 'jogadorMao' in query and hasattr(self.casebase, 'df'):
-            filtered_df = self.casebase.df[self.casebase.df['jogadorMao'] == query['jogadorMao']]
-            filtered_casebase = cbrkit.loaders.dataframe(filtered_df)
-        else:
-            filtered_casebase = self.casebase
-        result = cbrkit.retrieval.apply(filtered_casebase, query, retriever)
+
         if isinstance(result.casebase, dict):
             if all(isinstance(v, list) for v in result.casebase.values()):
                 jogadas_similares_df = pd.DataFrame(result.casebase)

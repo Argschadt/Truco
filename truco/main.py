@@ -59,7 +59,6 @@ def aumentarTruco(quemPediu):
                 return
             
             return jogador2.avaliarTruco(cbr)
-    
     elif (jogador1.pediuTruco == True):
         opcao = -1
         while(opcao < 0 or opcao > 2):
@@ -82,6 +81,23 @@ def chamarJogadasBot():
     carta2 = Carta(carta_jogador_02.retornarNumero(), carta_jogador_02.retornarNaipe())
 
     return carta2
+
+def sortear_primeiro_jogador(jogador1, jogador2):
+    """Sorteia quem será o primeiro jogador da rodada inicial e ajusta os atributos."""
+    jogadores = ["jogador1", "jogador2"]
+    sorteado = random.choice(jogadores)
+    if sorteado == "jogador1":
+        jogador1.primeiro = True
+        jogador1.ultimo = False
+        jogador2.primeiro = False
+        jogador2.ultimo = True
+        print(f"Primeiro a jogar: {jogador1.nome}\n")
+    elif sorteado == "jogador2":
+        jogador2.primeiro = True
+        jogador2.ultimo = False
+        jogador1.primeiro = False
+        jogador1.ultimo = True
+        print(f"Primeiro a jogar: {jogador2.nome}\n")
 
 if __name__ == '__main__':
     jogo = Jogo()
@@ -111,20 +127,7 @@ if __name__ == '__main__':
         #Sorteio pra ver quem joga na primeira rodada
         if jogador1.rodadas == 0 and jogador2.rodadas == 0:
             if jogador1.pontos == 0 and jogador2.pontos == 0:
-                jogadores = ["jogador1", "jogador2"]
-                sorteado = random.choice(jogadores)
-                if sorteado == "jogador1":
-                    jogador1.primeiro = True
-                    jogador1.ultimo = False
-                    jogador2.primeiro = False
-                    jogador2.ultimo = True
-                    print(f"Primeiro a jogar: {jogador1.nome}\n")
-                elif sorteado == "jogador2":
-                    jogador2.primeiro = True
-                    jogador2.ultimo = False
-                    jogador1.primeiro = False
-                    jogador1.ultimo = True
-                    print(f"Primeiro a jogar: {jogador2.nome}\n")
+                sortear_primeiro_jogador(jogador1, jogador2)
 
         if jogador1.primeiro == True:
             while (carta_escolhida > len(jogador1.checaMao()) or int(carta_escolhida) <= 1):
