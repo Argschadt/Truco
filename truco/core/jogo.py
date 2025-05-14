@@ -3,6 +3,7 @@ from truco.models.baralho import Baralho
 from truco.models.jogador import Jogador
 from truco.bots.bot import Bot
 from truco.utils.pontos import MANILHA, CARTAS_VALORES
+from truco.core.rules import verificar_ganhador_rodada
 import random
 
 class Jogo():
@@ -68,28 +69,7 @@ class Jogo():
                 jogador2.primeiro = True
 
     def verificarCartaVencedora(self, carta_jogador_01, carta_jogador_02):
-        if (str(carta_jogador_01.numero)+" de "+carta_jogador_01.naipe) in MANILHA and (str(carta_jogador_02.numero)+" de "+carta_jogador_02.naipe) in MANILHA:
-            if MANILHA[str(carta_jogador_01.numero)+" de "+carta_jogador_01.naipe] > MANILHA[str(carta_jogador_02.numero)+" de "+carta_jogador_02.naipe]:
-                return carta_jogador_01
-           
-            elif MANILHA[str(carta_jogador_02.numero)+" de "+carta_jogador_02.naipe] > MANILHA[str(carta_jogador_01.numero)+" de "+carta_jogador_01.naipe]:
-                return carta_jogador_02
-        
-        elif (str(carta_jogador_01.numero)+" de "+carta_jogador_01.naipe) in MANILHA:
-            return carta_jogador_01
-        
-        elif (str(carta_jogador_02.numero)+" de "+carta_jogador_02.naipe) in MANILHA:
-            return carta_jogador_02
-        
-        else:
-            if CARTAS_VALORES[str(carta_jogador_01.numero)] > CARTAS_VALORES[str(carta_jogador_02.numero)]:
-                return carta_jogador_01
-        
-            elif CARTAS_VALORES[str(carta_jogador_01.retornarNumero())] < CARTAS_VALORES[str(carta_jogador_02.retornarNumero())]:
-                return carta_jogador_02
-        
-            else:
-                return "Empate"
+        return verificar_ganhador_rodada(carta_jogador_01, carta_jogador_02)
     
 
     def trucoAceito(self, aceitou):

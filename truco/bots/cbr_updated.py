@@ -12,6 +12,10 @@ from truco.utils.pontos import MANILHA, CARTAS_VALORES
 class CbrUpdated():
     def __init__(self):
         self.indice = 0
+        # Define o diretório base do projeto
+        self.base_dir = Path(__file__).parent.parent.parent
+        self.csv_maos = self.base_dir / 'dbtrucoimitacao_maos.csv'
+        self.csv_maos_cbrkit = self.base_dir / 'dbtrucoimitacao_maos_cbrkit.csv'
         self.casebase = self.atualizarDataframe()
 
     def codificarNaipe(self, naipe):
@@ -28,7 +32,9 @@ class CbrUpdated():
             return 4
 
     def gerar_novo_CSV(self):
-        df = pd.read_csv('../dbtrucoimitacao_maos.csv', index_col='idMao').fillna(0)
+        if not self.csv_maos.exists():
+            raise FileNotFoundError(f"Arquivo CSV de mãos não encontrado: {self.csv_maos}")
+        df = pd.read_csv(self.csv_maos, index_col='idMao').fillna(0)
         # Filtra apenas rodadas onde todas as rodadas foram ganhas pelo jogador 2
         df = df[(df['ganhadorPrimeiraRodada'] == 2) & (df['ganhadorSegundaRodada'] == 2) & (df['ganhadorTerceiraRodada'] == 2)]
         colunas_string = [
@@ -46,11 +52,13 @@ class CbrUpdated():
         df[colunas_string] = df[colunas_string].astype('int')
         df = df[(df >= 0).all(axis=1)]
         
-        df.to_csv('../dbtrucoimitacao_maos_cbrkit.csv')
-        
+        df.to_csv(self.csv_maos_cbrkit)
+
     def atualizarDataframe(self):
         self.gerar_novo_CSV()
-        casebase = cbrkit.loaders.file(Path('../dbtrucoimitacao_maos_cbrkit.csv'))
+        if not self.csv_maos_cbrkit.exists():
+            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.csv_maos_cbrkit}")
+        casebase = cbrkit.loaders.file(self.csv_maos_cbrkit)
         return casebase
     
     def montar_query_do_registro(self, registro):

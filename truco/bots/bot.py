@@ -1,5 +1,7 @@
+import os
 import random 
 import pandas as pd
+from truco.models.modelo_registro import ModeloRegistro
 
 class Bot():
 
@@ -17,7 +19,9 @@ class Bot():
         self.ultimo = False
         self.flor = False
         self.pediuTruco = False
-        self.modeloRegistro = pd.read_csv('../modelo_registro.csv', index_col='idMao')
+        self.modeloRegistro = ModeloRegistro()
+        # Caminho absoluto para a raiz do projeto
+        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     def criarMao(self, baralho):
         self.indices = [0, 1, 2]
