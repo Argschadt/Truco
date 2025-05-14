@@ -58,3 +58,33 @@ class Jogador():
             # print('Flor do Jogador')
             return True
         return False
+
+    def aceitar_truco(self, valor_truco):
+        resp = input(f"Seu oponente pediu Truco (vale {valor_truco} pontos). Aceita? [s/n]: ").strip().lower()
+        return resp == 's'
+
+    def aceitar_envido(self, valor_envido):
+        resp = input(f"Seu oponente pediu Envido (vale {valor_envido} pontos). Aceita? [s/n]: ").strip().lower()
+        return resp == 's'
+
+    def aceitar_flor(self):
+        resp = input(f"Seu oponente pediu Flor (vale 3 pontos). Aceita? [s/n]: ").strip().lower()
+        return resp == 's'
+
+    def calcular_pontos_envido(self):
+        naipes = {}
+        for carta in self.mao:
+            n = carta.retornarNaipe()
+            v = carta.retornarNumero()
+            if n not in naipes:
+                naipes[n] = []
+            naipes[n].append(v)
+        max_envido = 0
+        for valores in naipes.values():
+            if len(valores) >= 2:
+                valores = sorted([v for v in valores if v <= 7], reverse=True)
+                if len(valores) >= 2:
+                    max_envido = max(max_envido, 20 + valores[0] + valores[1])
+        if max_envido == 0:
+            max_envido = max([v for sub in naipes.values() for v in sub])
+        return max_envido

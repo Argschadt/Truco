@@ -113,7 +113,6 @@ class Bot():
     def checaFlor(self):
         # print('checaflor')
         if all(carta.retornarNaipe() == self.mao[0].retornarNaipe() for carta in self.mao):
-            print('Flor do Bot!')
             self.flor = True
             return True
         return False
@@ -146,5 +145,84 @@ class Bot():
     def avaliarEnvido(self):
         return None
 
+    # --- Métodos essenciais para Truco Gaúcho ---
+    def pedir_truco(self, estado_jogo=None):
+        """Decide se vai pedir truco (ou aumentar aposta). Pode usar heurística ou CBR."""
+        # Exemplo simples: pede truco se a mão for forte
+        return self.forcaMao > 40
 
-    # def caseBasedReasoning(self):
+    def aceitar_truco(self, valor_truco, estado_jogo=None):
+        """Decide se aceita o truco pedido pelo adversário."""
+        # Exemplo simples: aceita se a mão for razoável
+        return self.forcaMao > 25
+
+    def pedir_envido(self, estado_jogo=None):
+        """Decide se vai pedir envido."""
+        # Exemplo simples: pede envido se tem duas cartas do mesmo naipe
+        naipes = [carta.retornarNaipe() for carta in self.mao]
+        return len(set(naipes)) < 3
+
+    def aceitar_envido(self, valor_envido, estado_jogo=None):
+        """Decide se aceita o envido pedido pelo adversário."""
+        # Exemplo simples: aceita se tem pelo menos 25 pontos de envido
+        return self.calcular_pontos_envido() >= 25
+
+    def pedir_flor(self, estado_jogo=None):
+        """Decide se vai pedir flor."""
+        return self.flor
+
+    def aceitar_flor(self, estado_jogo=None):
+        """Decide se aceita a flor do adversário."""
+        # Exemplo simples: sempre aceita
+        return True
+
+    def decidir_correr_mao_de_onze(self, estado_jogo=None):
+        """Decide se corre ou joga a mão de onze."""
+        # Exemplo simples: corre se a mão for muito ruim
+        return self.forcaMao < 20
+
+    def decidir_escurinho(self, estado_jogo=None):
+        """Decide como jogar no escurinho (mão de onze especial)."""
+        # Exemplo: joga normalmente, pode ser expandido
+        return True
+
+    def registrar_resultado_rodada(self, resultado):
+        """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
+        self.rodadas += 1
+        # Pode adicionar lógica de aprendizado ou ajuste de estratégia
+
+    def registrar_resultado_mao(self, resultado):
+        """Atualiza o estado do bot após cada mão (ganhou, perdeu, empatou)."""
+        # Pode adicionar lógica de aprendizado ou ajuste de estratégia
+        pass
+
+    def resetar_estado_mao(self):
+        """Limpa todos os estados temporários ao fim de uma mão."""
+        self.mao = []
+        self.maoRank = []
+        self.indices = []
+        self.pontuacaoCartas = []
+        self.forcaMao = 0
+        self.flor = False
+        self.pediuTruco = False
+        self.rodadas = 0
+        self.invido = 0
+
+    def calcular_pontos_envido(self):
+        """Calcula os pontos de envido da mão do bot."""
+        naipes = {}
+        for carta in self.mao:
+            n = carta.retornarNaipe()
+            v = carta.retornarNumero()
+            if n not in naipes:
+                naipes[n] = []
+            naipes[n].append(v)
+        max_envido = 0
+        for valores in naipes.values():
+            if len(valores) >= 2:
+                valores = sorted([v for v in valores if v <= 7], reverse=True)  # só cartas 1-7 contam
+                if len(valores) >= 2:
+                    max_envido = max(max_envido, 20 + valores[0] + valores[1])
+        if max_envido == 0:
+            max_envido = max([v for sub in naipes.values() for v in sub])
+        return max_envido

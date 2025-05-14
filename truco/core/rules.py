@@ -1,23 +1,36 @@
 from truco.utils.pontos import MANILHA, CARTAS_VALORES
 
+# Hierarquia completa do Truco Gaúcho
+HIERARQUIA_TRUCO_GAUCHO = [
+    "1 de ESPADAS",
+    "1 de BASTOS",
+    "7 de ESPADAS",
+    "7 de OUROS",
+    "3 de ESPADAS", "3 de OUROS", "3 de COPAS", "3 de BASTOS",
+    "2 de ESPADAS", "2 de OUROS", "2 de COPAS", "2 de BASTOS",
+    "1 de OUROS", "1 de COPAS",
+    "12 de ESPADAS", "12 de OUROS", "12 de COPAS", "12 de BASTOS",
+    "11 de ESPADAS", "11 de OUROS", "11 de COPAS", "11 de BASTOS",
+    "10 de ESPADAS", "10 de OUROS", "10 de COPAS", "10 de BASTOS",
+    "7 de COPAS", "7 de BASTOS",
+    "6 de ESPADAS", "6 de OUROS", "6 de COPAS", "6 de BASTOS",
+    "5 de ESPADAS", "5 de OUROS", "5 de COPAS", "5 de BASTOS",
+    "4 de ESPADAS", "4 de OUROS", "4 de COPAS", "4 de BASTOS"
+]
+
+HIERARQUIA_MAPA = {nome: i for i, nome in enumerate(HIERARQUIA_TRUCO_GAUCHO)}
+
 def verificar_ganhador_rodada(carta1, carta2):
-    # Retorna a carta vencedora ou 'Empate'
-    if (str(carta1.numero)+" de "+carta1.naipe) in MANILHA and (str(carta2.numero)+" de "+carta2.naipe) in MANILHA:
-        if MANILHA[str(carta1.numero)+" de "+carta1.naipe] > MANILHA[str(carta2.numero)+" de "+carta2.naipe]:
-            return carta1
-        elif MANILHA[str(carta2.numero)+" de "+carta2.naipe] > MANILHA[str(carta1.numero)+" de "+carta1.naipe]:
-            return carta2
-    elif (str(carta1.numero)+" de "+carta1.naipe) in MANILHA:
+    nome1 = f"{carta1.numero} de {carta1.naipe.upper()}"
+    nome2 = f"{carta2.numero} de {carta2.naipe.upper()}"
+    idx1 = HIERARQUIA_MAPA.get(nome1, 100)
+    idx2 = HIERARQUIA_MAPA.get(nome2, 100)
+    if idx1 < idx2:
         return carta1
-    elif (str(carta2.numero)+" de "+carta2.naipe) in MANILHA:
+    elif idx2 < idx1:
         return carta2
     else:
-        if CARTAS_VALORES[str(carta1.numero)] > CARTAS_VALORES[str(carta2.numero)]:
-            return carta1
-        elif CARTAS_VALORES[str(carta1.numero)] < CARTAS_VALORES[str(carta2.numero)]:
-            return carta2
-        else:
-            return "Empate"
+        return "Empate"
 
 def calcular_pontuacao(jogador, tipo_ponto, valor=1):
     # Exemplo: tipo_ponto pode ser 'rodada', 'truco', 'envido', etc.
