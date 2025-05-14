@@ -1,4 +1,4 @@
-from carta import Carta
+from truco.models.carta import Carta
 import random
 
 

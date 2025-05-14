@@ -1,3 +1,6 @@
+from truco.models.carta import Carta
+from truco.models.baralho import Baralho
+
 class Jogador():
 
     def __init__(self, nome):
@@ -5,7 +8,6 @@ class Jogador():
         self.mao = []
         self.maoRank = []
         self.pontos = 0
-        self.rodadas = 0
         self.invido = 0
         self.primeiro = False
         self.ultimo = False
@@ -14,7 +16,7 @@ class Jogador():
 
     def mostrarOpcoes(self):
         self.mostrarMao()
-        if (self.pediuTruco is False): 
+        if self.pediuTruco is False:
             print('[4] Truco')
         if ((len(self.mao)) == 3 and self.flor is False and (self.checaFlor())):
             print('[5] Flor')
@@ -36,11 +38,8 @@ class Jogador():
         # print(cartas)
         # print('\n'.join(map('  '.join, zip(*(carta.desenharCarta(c) for c in cartas)))))
 
-    def adicionarPonto(self):
-        self.pontos += 1
-    
-    def adicionarRodada(self, rodadas):
-        self.rodadas += rodadas
+    def adicionarPonto(self, valor=1):
+        self.pontos += valor
     
     def resetar(self):
         self.pontos = 0

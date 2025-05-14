@@ -1,5 +1,5 @@
 import itertools
-from pontos import MANILHA, CARTAS_VALORES
+from truco.utils.pontos import MANILHA, CARTAS_VALORES
 
 class Carta():
 

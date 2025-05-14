@@ -1,8 +1,9 @@
-from baralho import Baralho
-from jogador import Jogador
-from bot import Bot
+from truco.models.carta import Carta
+from truco.models.baralho import Baralho
+from truco.models.jogador import Jogador
+from truco.bots.bot import Bot
+from truco.utils.pontos import MANILHA, CARTAS_VALORES
 import random
-from pontos import MANILHA, CARTAS_VALORES
 
 class Jogo():
 
@@ -92,18 +93,18 @@ class Jogo():
     
 
     def trucoAceito(self, aceitou):
-        print("Truco")
-        if(aceitou is False and self.trucoPontos == 1):
-            self.trucoPontos = 1
-            
-        elif(aceitou is False and self.trucoPontos != 1):
-            self.trucoPontos -= 1
-
-        elif(self.trucoPontos == 1):
-            self.trucoPontos += 1
-        
+        if aceitou:
+            # Truco aceito: aumenta para 3 pontos, ou dobra se já foi aumentado
+            if self.trucoPontos == 1:
+                self.trucoPontos = 3
+            else:
+                self.trucoPontos *= 2
         else:
-            self.trucoPontos +=2
+            # Truco recusado: mantém pontuação mínima para quem pediu
+            if self.trucoPontos == 1:
+                self.trucoPontos = 1
+            else:
+                self.trucoPontos -= 1
     
     def retornaTrucoPontos(self):
         return self.trucoPontos

@@ -1,7 +1,12 @@
 from sklearn.neighbors import NearestNeighbors
 import pandas as pd
 import warnings
-from pontos import MANILHA, CARTAS_VALORES
+from truco.models.carta import Carta
+from truco.models.baralho import Baralho
+from truco.models.jogador import Jogador
+from truco.core.jogo import Jogo
+from truco.bots.bot import Bot
+from truco.utils.pontos import MANILHA, CARTAS_VALORES
 
 class Cbr():
 
