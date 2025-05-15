@@ -59,16 +59,19 @@ class GameController:
         return self.historico_rodadas.count(1) == 2 or self.historico_rodadas.count(2) == 2
 
     def processar_fim_mao(self):
-        # Exemplo de lógica simplificada para processar fim de mão
         h = self.historico_rodadas
+        # Se algum jogador venceu 2 rodadas, ele vence a mão
+        if h.count(1) == 2:
+            calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+            return self.jogador1
+        elif h.count(2) == 2:
+            calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+            return self.jogador2
+        # Empate: 3 rodadas, ninguém venceu 2, e pelo menos uma rodada foi empate
         if len(h) == 3:
-            if h.count(1) > h.count(2):
-                calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
-                return self.jogador1
-            elif h.count(2) > h.count(1):
-                calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
-                return self.jogador2
-            else:
+            # Exemplo de empates: [1,2,0], [2,1,0], [0,1,2], [0,2,1], [1,0,2], [2,0,1], [0,0,1], [0,0,2], [1,0,0], [2,0,0], [0,1,0], [0,2,0]
+            # Regra: se ninguém venceu 2 rodadas, é empate
+            if h.count(1) < 2 and h.count(2) < 2:
                 return None  # Empate
         return None
 

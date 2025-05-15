@@ -72,19 +72,20 @@ class Jogador():
         return resp == 's'
 
     def calcular_pontos_envido(self):
+        from truco.utils.pontos import ENVIDO
         naipes = {}
         for carta in self.mao:
             n = carta.retornarNaipe()
-            v = carta.retornarNumero()
+            v = ENVIDO.get(str(carta.retornarNumero()), 0)
             if n not in naipes:
                 naipes[n] = []
             naipes[n].append(v)
         max_envido = 0
         for valores in naipes.values():
             if len(valores) >= 2:
-                valores = sorted([v for v in valores if v <= 7], reverse=True)
-                if len(valores) >= 2:
-                    max_envido = max(max_envido, 20 + valores[0] + valores[1])
+                valores = sorted(valores, reverse=True)
+                max_envido = max(max_envido, 20 + valores[0] + valores[1])
         if max_envido == 0:
+            # Se não houver 2 cartas do mesmo naipe, pega o maior valor de envido isolado
             max_envido = max([v for sub in naipes.values() for v in sub])
         return max_envido
