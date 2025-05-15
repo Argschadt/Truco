@@ -29,6 +29,7 @@ class GameController:
         self.jogador2.criarMao(self.baralho)
         self.jogo.resetarTrucoPontos()
         self.historico_rodadas = []
+        self.resetar_apostas()  # Reset apostas e variáveis de truco/retruco
 
     def jogar_rodada(self, carta1, carta2):
         """

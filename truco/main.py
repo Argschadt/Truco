@@ -48,13 +48,13 @@ def main():
                     if primeiro_jogador == controller.jogador1:
                         primeiro_jogador.mostrarMao()
                         pode_envido = rodada == 1 and not envido_pedido
-                        pode_flor = primeiro_jogador.flor and len(primeiro_jogador.mao) == 3
+                        pode_flor = primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                         prompt = "[T]ruco"
                         if controller.pontos_truco == 2:
                             prompt = "[T]ruco (Retruco)"
                         elif controller.pontos_truco == 3:
                             prompt = "[T]ruco (Vale Quatro)"
-                        if not pode_pedir_truco:
+                        if not pode_pedir_truco and controller.pontos_truco > 1:
                             prompt = prompt.replace("[T]ruco", "(Truco já pedido por você)")
                         if pode_envido:
                             prompt += ", [E]nvido"
@@ -120,7 +120,7 @@ def main():
                             print("Opção inválida! Digite T, E, F ou o número da carta.")
                     else:
                         pode_envido = rodada == 1 and not envido_pedido
-                        pode_flor = primeiro_jogador.flor and len(primeiro_jogador.mao) == 3
+                        pode_flor = primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                         if not truco_pedido and primeiro_jogador.pedir_truco():
                             controller.pedir_truco(primeiro_jogador)
                             truco_pedido = True
