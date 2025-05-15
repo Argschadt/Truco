@@ -32,6 +32,8 @@ def main():
         flor_pode_ser_pedida = True
         envido_ja_pedido = False
         flor_ja_pedida = False
+        # NOVO: controle de quem pode pedir o próximo aumento do truco
+        quem_pode_pedir_truco = None
 
         # Controle de quem começa a rodada
         if hasattr(controller, 'proximo_primeiro') and controller.proximo_primeiro:
@@ -100,7 +102,7 @@ def main():
                         prompt += " ou "
                     prompt += "digite o número da carta para jogar: "
                     acao = input(prompt).strip().lower()
-                    if acao == 't' and pode_pedir_truco:
+                    if acao == 't' and pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
                         controller.pedir_truco(primeiro_jogador)
                         truco_etapa += 1
                         truco_pode_ser_pedido = False  # Só pode pedir de novo se o adversário aceitar
@@ -109,7 +111,7 @@ def main():
                             print(f"{segundo_jogador.nome} aceitou o Truco!")
                             truco_pode_ser_pedido = True  # Agora o adversário pode pedir o próximo nível
                             envido_pode_ser_pedido = False  # Não pode mais pedir Envido após aceitar Truco
-                            # NÃO dar break aqui! Continua para o humano escolher a carta normalmente
+                            quem_pode_pedir_truco = segundo_jogador  # Só quem aceitou pode pedir o próximo aumento
                             continue
                         else:
                             print(f"{segundo_jogador.nome} correu do Truco!")
@@ -154,7 +156,7 @@ def main():
                             else:
                                 calcular_pontuacao(controller.jogador2, 'envido', 1)
                         # NÃO chama controller.resetar_apostas() aqui!
-                        continue
+                        break
                     elif acao == 'f' and pode_flor:
                         controller.pedir_flor(primeiro_jogador)
                         flor_ja_pedida = True
@@ -186,7 +188,7 @@ def main():
                     # Bot
                     pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                     pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
-                    if pode_pedir_truco and primeiro_jogador.pedir_truco():
+                    if pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador) and primeiro_jogador.pedir_truco():
                         controller.pedir_truco(primeiro_jogador)
                         truco_etapa += 1
                         truco_pode_ser_pedido = False
@@ -253,6 +255,7 @@ def main():
                             print(f"{segundo_jogador.nome} aceitou o Truco!")
                             truco_pode_ser_pedido = True
                             envido_pode_ser_pedido = False  # Não pode mais pedir Envido após aceitar Truco
+                            quem_pode_pedir_truco = segundo_jogador  # Só quem aceitou pode pedir o próximo aumento
                         else:
                             print(f"{segundo_jogador.nome} correu do Truco!")
                             vencedor = controller.aceitar_truco(False)
@@ -296,7 +299,7 @@ def main():
                                 calcular_pontuacao(controller.jogador2, 'envido', 1)
                             else:
                                 calcular_pontuacao(controller.jogador1, 'envido', 1)
-                        continue
+                        break
                     elif pode_flor and primeiro_jogador.pedir_flor():
                         controller.pedir_flor(primeiro_jogador)
                         flor_ja_pedida = True
@@ -380,7 +383,7 @@ def main():
                     prompt += " ou "
                 prompt += f"digite o número da carta para jogar: "
                 acao = input(prompt).strip().lower()
-                if acao == 't' and pode_pedir_truco:
+                if acao == 't' and pode_pedir_truco and (truco_etapa > 0 and quem_pode_pedir_truco == segundo_jogador):
                     controller.pedir_truco(segundo_jogador)
                     truco_pedido = True
                     truco_etapa += 1  # Atualiza etapa do truco
@@ -390,60 +393,17 @@ def main():
                     if resposta_bot:
                         print(f"{primeiro_jogador.nome} aceitou o Truco!")
                         envido_pode_ser_pedido = False  # Não pode mais pedir Envido após aceitar Truco
+                        quem_pode_pedir_truco = primeiro_jogador  # Só quem aceitou pode pedir o próximo aumento
                         segundo_jogador.mostrarMao()
-                        # Atualiza pode_pedir_truco para próxima etapa
-                        pode_pedir_truco = False
-                        if truco_etapa == 1 and controller.pontos_truco == 2:
-                            pode_pedir_truco = True
-                        elif truco_etapa == 2 and controller.pontos_truco == 3:
-                            pode_pedir_truco = True
-                        prompt = "[T]ruco (Retruco)" if controller.pontos_truco == 2 and pode_pedir_truco else ""
-                        if controller.pontos_truco == 3 and pode_pedir_truco:
-                            prompt = "[T]ruco (Vale Quatro)"
-                        if prompt:
-                            prompt += " ou "
-                        prompt += f"digite o número da carta para jogar: "
-                        acao2 = input(prompt).strip().lower()
-                        if acao2 == 't' and pode_pedir_truco:
-                            controller.pedir_truco(segundo_jogador)
-                            truco_pedido = True
-                            truco_etapa += 1
-                            print(f"{segundo_jogador.nome} pediu Truco! (vale {controller.pontos_truco} pontos)")
-                            resposta_bot2 = primeiro_jogador.aceitar_truco(controller.pontos_truco)
-                            if resposta_bot2:
-                                print(f"{primeiro_jogador.nome} aceitou o Truco!")
-                                segundo_jogador.mostrarMao()
-                                try:
-                                    carta_idx = int(input(f'{segundo_jogador.nome}, escolha a carta (0 a {len(segundo_jogador.mao)-1}): '))
-                                    while carta_idx < 0 or carta_idx >= len(segundo_jogador.mao):
-                                        print(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}")
-                                        carta_idx = int(input(f'{segundo_jogador.nome}, escolha a carta: '))
-                                except ValueError:
-                                    print("Entrada inválida! Selecionando a primeira carta disponível.")
-                                    carta_idx = 0
-                                carta2 = segundo_jogador.jogarCarta(carta_idx)
-                            else:
-                                print(f"{primeiro_jogador.nome} correu do Truco!")
-                                vencedor = controller.aceitar_truco(False)
-                                print(f"{vencedor.nome} ganhou a mão!")
-                                controller.mostrar_estado()
-                                mao_encerrada = True
-                                # Alternância fixa de quem começa a próxima mão
-                                if not hasattr(controller, 'alternar_primeiro'):
-                                    controller.alternar_primeiro = (primeiro_da_partida == controller.jogador1)
-                                controller.alternar_primeiro = not controller.alternar_primeiro
-                                if controller.alternar_primeiro:
-                                    controller.definir_proximo_primeiro(controller.jogador1)
-                                else:
-                                    controller.definir_proximo_primeiro(controller.jogador2)
-                                break
-                        elif acao2.isdigit() and int(acao2) >= 0 and int(acao2) < len(segundo_jogador.mao):
-                            carta_idx = int(acao2)
-                            carta2 = segundo_jogador.jogarCarta(carta_idx)
-                        else:
-                            print("Opção inválida! Digite T ou o número da carta.")
+                        try:
+                            carta_idx = int(input(f'{segundo_jogador.nome}, escolha a carta (0 a {len(segundo_jogador.mao)-1}): '))
+                            while carta_idx < 0 or carta_idx >= len(segundo_jogador.mao):
+                                print(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}")
+                                carta_idx = int(input(f'{segundo_jogador.nome}, escolha a carta: '))
+                        except ValueError:
+                            print("Entrada inválida! Selecionando a primeira carta disponível.")
                             carta_idx = 0
-                            carta2 = segundo_jogador.jogarCarta(carta_idx)
+                        carta2 = segundo_jogador.jogarCarta(carta_idx)
                     else:
                         print(f"{primeiro_jogador.nome} correu do Truco!")
                         vencedor = controller.aceitar_truco(False)
@@ -459,7 +419,6 @@ def main():
                         else:
                             controller.definir_proximo_primeiro(controller.jogador2)
                         break
-                    continue
                 elif acao == 'e' and pode_envido:
                     controller.pedir_envido(segundo_jogador)
                     envido_ja_pedido = True
@@ -521,7 +480,22 @@ def main():
             ganhador, vencedor_mao = controller.jogar_rodada(carta1, carta2)
 
             # NOVO: Encerra a mão imediatamente se alguém venceu 2 rodadas
-            if controller.historico_rodadas.count(1) == 2 or controller.historico_rodadas.count(2) == 2:
+            if len(controller.historico_rodadas) == 2 and (controller.historico_rodadas[0] == controller.historico_rodadas[1]) and controller.historico_rodadas[0] in [1,2]:
+                # Só encerra se o mesmo jogador venceu as duas primeiras rodadas (2x0)
+                vencedor_mao = controller.processar_fim_mao()
+                if vencedor_mao:
+                    print(f'\n{vencedor_mao.nome} venceu a mão e ganhou {controller.pontos_truco} ponto(s)!')
+                    controller.mostrar_estado()
+                    if vencedor_mao == controller.jogador2:
+                        controller.definir_proximo_primeiro(controller.jogador2)
+                    else:
+                        controller.definir_proximo_primeiro(controller.jogador1)
+                else:
+                    print('\nA mão terminou empatada!')
+                mao_encerrada = True
+                break
+            elif len(controller.historico_rodadas) == 3 and (controller.historico_rodadas.count(1) == 2 or controller.historico_rodadas.count(2) == 2):
+                # Só pode acontecer na terceira rodada
                 vencedor_mao = controller.processar_fim_mao()
                 if vencedor_mao:
                     print(f'\n{vencedor_mao.nome} venceu a mão e ganhou {controller.pontos_truco} ponto(s)!')
@@ -543,9 +517,11 @@ def main():
                 print(f'{segundo_jogador.nome} venceu a rodada!')
                 # Inverte: segundo_jogador passa a ser o primeiro
                 primeiro_jogador, segundo_jogador = segundo_jogador, primeiro_jogador
-            else:
+            elif ganhador == "Empate":
                 print('Rodada empatada!')
                 # Em caso de empate, quem começou continua começando
+            else:
+                print('Rodada empatada!')
                   
         if mao_encerrada:
             continue  # Encerra a mão atual e vai para a próxima mão
