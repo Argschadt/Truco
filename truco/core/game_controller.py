@@ -36,9 +36,9 @@ class GameController:
         Joga uma rodada, atualiza o histórico e retorna o ganhador da rodada e, se houver, o vencedor da mão.
         """
         ganhador = verificar_ganhador_rodada(carta1, carta2)
-        if ganhador == 1:
+        if ganhador == carta1:
             self.historico_rodadas.append(1)
-        elif ganhador == 2:
+        elif ganhador == carta2:
             self.historico_rodadas.append(2)
         else:
             self.historico_rodadas.append(0)  # empate
@@ -67,12 +67,28 @@ class GameController:
         elif h.count(2) == 2:
             calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
             return self.jogador2
-        # Empate: 3 rodadas, ninguém venceu 2, e pelo menos uma rodada foi empate
+        # Se foram jogadas 3 rodadas e ninguém venceu 2
         if len(h) == 3:
-            # Exemplo de empates: [1,2,0], [2,1,0], [0,1,2], [0,2,1], [1,0,2], [2,0,1], [0,0,1], [0,0,2], [1,0,0], [2,0,0], [0,1,0], [0,2,0]
-            # Regra: se ninguém venceu 2 rodadas, é empate
-            if h.count(1) < 2 and h.count(2) < 2:
-                return None  # Empate
+            # Se cada jogador venceu 1 rodada e a última não foi empate, quem venceu a última leva a mão
+            if h.count(1) == 1 and h.count(2) == 1:
+                if h[2] == 1:
+                    calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                    return self.jogador1
+                elif h[2] == 2:
+                    calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                    return self.jogador2
+                else:
+                    return None  # Empate real: 1,2,0 ou 2,1,0
+            # Se houve 3 empates
+            if h.count(0) == 3:
+                return None
+            # Se alguém venceu a última e não há 2 vitórias para ninguém, ele leva
+            if h[2] == 1:
+                calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                return self.jogador1
+            elif h[2] == 2:
+                calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                return self.jogador2
         return None
 
     def mostrar_estado(self):

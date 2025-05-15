@@ -42,10 +42,11 @@ class Jogador():
         self.pontos += valor
     
     def resetar(self):
-        self.pontos = 0
+        # NÃO zera os pontos!
         self.mao = []
         self.flor = False
         self.pediuTruco = False
+        # ...outros estados temporários se necessário...
 
     def checaMao(self):
         return self.mao
@@ -89,3 +90,10 @@ class Jogador():
             # Se não houver 2 cartas do mesmo naipe, pega o maior valor de envido isolado
             max_envido = max([v for sub in naipes.values() for v in sub])
         return max_envido
+
+    def pedir_envido(self, estado_jogo=None):
+        # Não pede Envido se tiver Flor
+        if self.flor:
+            return False
+        naipes = [carta.retornarNaipe() for carta in self.mao]
+        return len(set(naipes)) < 3

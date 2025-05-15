@@ -158,7 +158,9 @@ class Bot():
 
     def pedir_envido(self, estado_jogo=None):
         """Decide se vai pedir envido."""
-        # Exemplo simples: pede envido se tem duas cartas do mesmo naipe
+        # Não pede Envido se tiver Flor
+        if self.flor:
+            return False
         naipes = [carta.retornarNaipe() for carta in self.mao]
         return len(set(naipes)) < 3
 
