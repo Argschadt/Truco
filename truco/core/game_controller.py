@@ -31,17 +31,18 @@ class GameController:
         self.historico_rodadas = []
         self.resetar_apostas()  # Reset apostas e variáveis de truco/retruco
 
-    def jogar_rodada(self, carta1, carta2):
+    def jogar_rodada(self, carta1, carta2, primeiro_jogador, segundo_jogador):
         """
         Joga uma rodada, atualiza o histórico e retorna o ganhador da rodada.
+        O histórico registra 1 para quem começou a rodada, 2 para o segundo.
         """
         ganhador = verificar_ganhador_rodada(carta1, carta2)
         if ganhador == carta1:
-            self.historico_rodadas.append(1)
+            self.historico_rodadas.append(1)  # Primeiro jogador venceu
         elif ganhador == carta2:
-            self.historico_rodadas.append(2)
+            self.historico_rodadas.append(2)  # Segundo jogador venceu
         else:
-            self.historico_rodadas.append(0)  # empate
+            self.historico_rodadas.append(0)  # Empate
         return ganhador, None
 
     def mao_decidida(self):

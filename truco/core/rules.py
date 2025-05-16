@@ -21,8 +21,14 @@ HIERARQUIA_TRUCO_GAUCHO = [
 HIERARQUIA_MAPA = {nome.upper(): i for i, nome in enumerate(HIERARQUIA_TRUCO_GAUCHO)}
 
 def verificar_ganhador_rodada(carta1, carta2):
+    # Empata se o número for igual e não for manilha
     nome1 = f"{carta1.numero} de {carta1.naipe}".upper().strip()
     nome2 = f"{carta2.numero} de {carta2.naipe}".upper().strip()
+    # Checa se são manilhas
+    eh_manilha1 = nome1.title() in MANILHA
+    eh_manilha2 = nome2.title() in MANILHA
+    if carta1.numero == carta2.numero and not (eh_manilha1 or eh_manilha2):
+        return "Empate"
     idx1 = HIERARQUIA_MAPA.get(nome1, 100)
     idx2 = HIERARQUIA_MAPA.get(nome2, 100)
     if idx1 < idx2:

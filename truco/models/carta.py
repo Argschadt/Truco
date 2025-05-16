@@ -158,3 +158,15 @@ class Carta():
             l_mostrar_carta[4] = "│. . ♠ . .│"
 
         return l_mostrar_carta
+
+    def __str__(self):
+        if self.numero == 1 and self.naipe == 'Espadas':
+            return "ESPADÃO +"
+        elif self.numero == 1 and self.naipe == 'Bastos':
+            return "BASTIÃO +"
+        elif self.numero == 7 and self.naipe == 'Espadas':
+            return "Sete de Espadas +"
+        elif self.numero == 7 and self.naipe == 'Ouros':
+            return "Sete de Ouros +"
+        else:
+            return f"{self.numero} de {self.naipe}"
