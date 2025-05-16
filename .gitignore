@@ -1,1 +1,18 @@
-truco/__pycache__/*
+# Ignorar caches e arquivos compilados do Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+# VSCode
+.vscode/
+# Jupyter Notebooks
+.ipynb_checkpoints/
+# OS files
+.DS_Store
+Thumbs.db
+# Env
+.env
+.venv/
+venv/
