@@ -21,15 +21,45 @@ class Bot():
         self.pediuTruco = False
         self.modeloRegistro = ModeloRegistro()
         # Caminho absoluto para a raiz do projeto
-        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
+    
     def criarMao(self, baralho):
         self.indices = [0, 1, 2]
         
-        # Mudar forma de classificação dos dados vindos da base de casos, para ter uma métrica extra de inserção
-        for i in range(3):
-            self.mao.append(baralho.retirarCarta())
-        self.flor = self.checaFlor()
+        # Garantir que o bot tenha uma flor (3 cartas do mesmo naipe)
+        # Como são apenas 2 jogadores, sempre será possível retirar uma flor do baralho
+        
+        # Obter todos os naipes disponíveis no baralho
+        available_suits = list(set(carta.naipe for carta in baralho.cartas))
+        if available_suits:
+            chosen_suit = random.choice(available_suits)
+            
+            # Encontrar todas as cartas do naipe escolhido
+            suit_cards = [carta for carta in baralho.cartas if carta.naipe == chosen_suit]
+            
+            # Se tivermos pelo menos 3 cartas do naipe escolhido, use-as
+            if len(suit_cards) >= 3:
+                # Remover estas cartas do baralho
+                for carta in suit_cards[:3]:
+                    baralho.cartas.remove(carta)
+                
+                # Adicionar à mão do bot
+                self.mao.extend(suit_cards[:3])
+                
+                # Marcar que temos uma flor
+                self.flor = True
+            else:
+                # Fallback: criação padrão de mão se não pudermos criar uma flor
+                print("Aviso: Não foi possível criar uma flor para o Bot, usando cartas aleatórias.")
+                for i in range(3):
+                    self.mao.append(baralho.retirarCarta())
+                self.flor = self.checaFlor()
+        else:
+            # Fallback: criação padrão de mão
+            for i in range(3):
+                self.mao.append(baralho.retirarCarta())
+            self.flor = self.checaFlor()
+            
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
         self.inicializarRegistro()

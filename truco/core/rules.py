@@ -18,11 +18,11 @@ HIERARQUIA_TRUCO_GAUCHO = [
     "4 de ESPADAS", "4 de OUROS", "4 de COPAS", "4 de BASTOS"
 ]
 
-HIERARQUIA_MAPA = {nome: i for i, nome in enumerate(HIERARQUIA_TRUCO_GAUCHO)}
+HIERARQUIA_MAPA = {nome.upper(): i for i, nome in enumerate(HIERARQUIA_TRUCO_GAUCHO)}
 
 def verificar_ganhador_rodada(carta1, carta2):
-    nome1 = f"{carta1.numero} de {carta1.naipe.upper()}"
-    nome2 = f"{carta2.numero} de {carta2.naipe.upper()}"
+    nome1 = f"{carta1.numero} de {carta1.naipe}".upper().strip()
+    nome2 = f"{carta2.numero} de {carta2.naipe}".upper().strip()
     idx1 = HIERARQUIA_MAPA.get(nome1, 100)
     idx2 = HIERARQUIA_MAPA.get(nome2, 100)
     if idx1 < idx2:

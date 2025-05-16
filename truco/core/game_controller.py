@@ -33,7 +33,7 @@ class GameController:
 
     def jogar_rodada(self, carta1, carta2):
         """
-        Joga uma rodada, atualiza o histórico e retorna o ganhador da rodada e, se houver, o vencedor da mão.
+        Joga uma rodada, atualiza o histórico e retorna o ganhador da rodada.
         """
         ganhador = verificar_ganhador_rodada(carta1, carta2)
         if ganhador == carta1:
@@ -42,17 +42,7 @@ class GameController:
             self.historico_rodadas.append(2)
         else:
             self.historico_rodadas.append(0)  # empate
-
-        vencedor_mao = None
-        if self.historico_rodadas.count(1) == 2:
-            vencedor_mao = self.jogador1
-            calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
-            self.mao_encerrada = True
-        elif self.historico_rodadas.count(2) == 2:
-            vencedor_mao = self.jogador2
-            calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
-            self.mao_encerrada = True
-        return ganhador, vencedor_mao
+        return ganhador, None
 
     def mao_decidida(self):
         """Retorna True se algum jogador já venceu 2 rodadas nesta mão."""
