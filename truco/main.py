@@ -1,3 +1,4 @@
+from truco.utils.interface import mostrar_mao, mostrar_estado, prompt_acao, mostrar_mensagem
 from truco.core.game_controller import GameController
 from truco.core.rules import calcular_pontuacao
 import random
@@ -86,9 +87,9 @@ def main():
         controller.historico_rodadas = []  # Limpa o histórico de rodadas no início de cada mão
         # Exibe as cartas do jogador humano antes de qualquer ação do bot
         if controller.jogador1.nome != 'Bot':
-            controller.jogador1.mostrarMao()
+            mostrar_mao(controller.jogador1)
         elif controller.jogador2.nome != 'Bot':
-            controller.jogador2.mostrarMao()
+            mostrar_mao(controller.jogador2)
 
         # Flags de controle de propostas para a mão
         truco_etapa = 0  # 0: nada, 1: truco, 2: retruco, 3: vale quatro
@@ -115,7 +116,7 @@ def main():
         for rodada in range(1, 4):
             if controller.mao_decidida():
                 break
-            print(f'\nRodada {rodada}')
+            mostrar_mensagem(f'\nRodada {rodada}')
 
             # --- PROMPTS DE TRUCO, ENVIDO, FLOR E AUMENTOS ---
             if controller.pontos_truco > 1 and controller.pontos_truco < 4:
@@ -136,12 +137,12 @@ def main():
                 pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
 
                 if primeiro_jogador == controller.jogador1:
-                    primeiro_jogador.mostrarMao()
+                    mostrar_mao(primeiro_jogador)
                     # Só permite pedir truco se for a vez do humano pedir (quem_pode_pedir_truco == primeiro_jogador ou None no início)
                     prompt = montar_prompt_acao(
                         pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador),
                         controller.pontos_truco, pode_envido, pode_flor, primeiro_jogador)
-                    acao = input(prompt).strip().lower()
+                    acao = prompt_acao(prompt)
                     if acao == 't' and pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
                         resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
                             controller, primeiro_jogador, segundo_jogador, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
@@ -179,16 +180,16 @@ def main():
                         envido_pode_ser_pedido = False  # Garante que não pode pedir envido após flor
                         continue
                     elif acao == 'f' and not pode_flor:
-                        print("Você não tem Flor!")
+                        mostrar_mensagem("Você não tem Flor!")
                     elif acao.isdigit():
                         carta_idx = int(acao)
                         if 0 <= carta_idx < len(primeiro_jogador.mao):
-                            print(f"Você escolheu: {primeiro_jogador.mao[carta_idx].numero} de {primeiro_jogador.mao[carta_idx].naipe}")
+                            mostrar_mensagem(f"Você escolheu: {primeiro_jogador.mao[carta_idx].numero} de {primeiro_jogador.mao[carta_idx].naipe}")
                             break
                         else:
-                            print(f"Índice inválido! Escolha entre 0 e {len(primeiro_jogador.mao)-1}.")
+                            mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(primeiro_jogador.mao)-1}.")
                     else:
-                        print("Opção inválida! Digite T, E, F ou o número da carta.")
+                        mostrar_mensagem("Opção inválida! Digite T, E, F ou o número da carta.")
                 else:
                     # Bot
                     pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
@@ -242,7 +243,7 @@ def main():
             else:  # Bot joga primeiro
                 carta1 = primeiro_jogador.jogarCarta(controller.cbr)
                 print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
-                segundo_jogador.mostrarMao()
+                mostrar_mao(segundo_jogador)
                 pode_pedir_truco = truco_pode_ser_pedido and (
                     (truco_etapa == 0 and controller.pontos_truco == 1) or
                     (truco_etapa == 1 and controller.pontos_truco == 2) or
@@ -251,16 +252,16 @@ def main():
                 pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                 pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                 prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_envido, pode_flor, segundo_jogador)
-                acao = input(prompt).strip().lower()
+                acao = prompt_acao(prompt)
                 if acao == 't' and pode_pedir_truco and (truco_etapa > 0 and quem_pode_pedir_truco == segundo_jogador):
                     resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
                         controller, segundo_jogador, primeiro_jogador, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                     if resultado:
-                        segundo_jogador.mostrarMao()
+                        segundo_jogador.mostrar_mao()
                         # Após aceitar o Truco, peça a carta apenas se o usuário ainda não digitou um número válido
                         while True:
                             prompt2 = f"{segundo_jogador.nome}, digite o número da carta para jogar (0 a {len(segundo_jogador.mao)-1}): "
-                            acao2 = input(prompt2).strip().lower()
+                            acao2 = prompt_acao(prompt2)
                             if acao2.isdigit():
                                 carta_idx = int(acao2)
                                 if 0 <= carta_idx < len(segundo_jogador.mao):
