@@ -188,15 +188,15 @@ class GameController:
         self.ultimo_flor = None
 
     def fim_de_jogo(self):
-        # Truco Gaúcho: vence quem chega a 12 pontos
-        return self.jogador1.pontos >= 12 or self.jogador2.pontos >= 12
+        # Truco Gaúcho: vence quem chega a 30 pontos
+        return self.jogador1.pontos >= 30 or self.jogador2.pontos >= 30
 
     def determinar_vencedor(self):
-        if self.jogador1.pontos >= 12 and self.jogador2.pontos >= 12:
+        if self.jogador1.pontos >= 30 and self.jogador2.pontos >= 30:
             return self.jogador1 if self.jogador1.pontos > self.jogador2.pontos else self.jogador2
-        elif self.jogador1.pontos >= 12:
+        elif self.jogador1.pontos >= 30:
             return self.jogador1
-        elif self.jogador2.pontos >= 12:
+        elif self.jogador2.pontos >= 30:
             return self.jogador2
         return None
 
