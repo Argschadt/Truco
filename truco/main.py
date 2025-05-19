@@ -3,7 +3,10 @@ from truco.core.game_controller import GameController
 from truco.core.rules import calcular_pontuacao
 import random
 
-def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_envido, pode_flor, jogador=None):
+def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_pedir_envido, pode_pedir_flor, jogador=None):
+    """
+    Monta o texto do prompt de ação para o jogador, indicando as opções disponíveis.
+    """
     prompt = ""
     if pode_pedir_truco:
         if pontos_truco == 1:
@@ -12,11 +15,11 @@ def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_envido, pode_flor, j
             prompt += "[T]ruco (Retruco)"
         elif pontos_truco == 3:
             prompt += "[T]ruco (Vale Quatro)"
-    if pode_envido:
+    if pode_pedir_envido:
         if prompt:
             prompt += ", "
         prompt += "[E]nvido"
-    if pode_flor:
+    if pode_pedir_flor:
         if prompt:
             prompt += ", "
         prompt += "[F]lor"
@@ -28,29 +31,33 @@ def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_envido, pode_flor, j
         prompt += "digite o número da carta para jogar: "
     return prompt
 
-def processar_acao_truco(controller, quem_pediu, quem_responde, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida):
-    controller.pedir_truco(quem_pediu)
-    truco_etapa += 1
+
+def processar_acao_truco(controller, jogador_que_pediu, jogador_que_responde, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida):
+    """
+    Processa a ação de pedir Truco, incluindo a resposta do adversário e atualização dos estados do jogo.
+    """
+    controller.pedir_truco(jogador_que_pediu)
+    etapa_truco += 1
     truco_pode_ser_pedido = False
-    print(f"{quem_pediu.nome} pediu Truco! (vale {controller.pontos_truco} pontos)")
+    print(f"{jogador_que_pediu.nome} pediu Truco! (vale {controller.pontos_truco} pontos)")
     # Decisão automática para bot
-    if hasattr(quem_responde, 'aceitar_truco') and quem_responde.nome == 'Bot':
-        aceitou = quem_responde.aceitar_truco(controller.pontos_truco)
+    if hasattr(jogador_que_responde, 'aceitar_truco') and jogador_que_responde.nome == 'Bot':
+        aceitou = jogador_que_responde.aceitar_truco(controller.pontos_truco)
         resposta = 's' if aceitou else 'n'
     else:
         resposta = ''
         while resposta not in ['s', 'n']:
-            resposta = input(f"{quem_responde.nome}, você aceita o Truco? (vale {controller.pontos_truco} pontos) [s/n]: ").strip().lower()
+            resposta = input(f"{jogador_que_responde.nome}, você aceita o Truco? (vale {controller.pontos_truco} pontos) [s/n]: ").strip().lower()
             if resposta not in ['s', 'n']:
                 print("Por favor, digite 's' para aceitar ou 'n' para correr.")
     if resposta == 's':
-        print(f"{quem_responde.nome} aceitou o Truco!")
+        print(f"{jogador_que_responde.nome} aceitou o Truco!")
         truco_pode_ser_pedido = True
         envido_pode_ser_pedido = False
-        quem_pode_pedir_truco = quem_responde
-        return True, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, False
+        quem_pode_pedir_truco = jogador_que_responde
+        return True, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, False
     else:
-        print(f"{quem_responde.nome} correu do Truco!")
+        print(f"{jogador_que_responde.nome} correu do Truco!")
         vencedor = controller.aceitar_truco(False)
         controller.resetar_apostas()
         print(f"{vencedor.nome} ganhou a mão!")
@@ -65,11 +72,13 @@ def processar_acao_truco(controller, quem_pediu, quem_responde, truco_etapa, tru
             controller.definir_proximo_primeiro(controller.jogador1)
         else:
             controller.definir_proximo_primeiro(controller.jogador2)
-        return False, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, True
+        return False, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, True
 
 def main():
+    """
+    Função principal que executa o loop do jogo Truco Gaúcho.
+    """
     print('Bem-vindo ao Truco Gaúcho!')
-    #nome1 = input('Digite seu nome: ') or 'Jogador'
     nome1 = 'Heitor'
     nome2 = 'Bot'
     controller = GameController(nome1, nome2, bot=True)
@@ -92,13 +101,13 @@ def main():
             mostrar_mao(controller.jogador2)
 
         # Flags de controle de propostas para a mão
-        truco_etapa = 0  # 0: nada, 1: truco, 2: retruco, 3: vale quatro
+        etapa_truco = 0  # 0: nada, 1: truco, 2: retruco, 3: vale quatro
         truco_pode_ser_pedido = True
         envido_pode_ser_pedido = True
         flor_pode_ser_pedida = True
         envido_ja_pedido = False
         flor_ja_pedida = False
-        # NOVO: controle de quem pode pedir o próximo aumento do truco
+        # Controle de quem pode pedir o próximo aumento do truco
         quem_pode_pedir_truco = None
 
         # Controle de quem começa a rodada
@@ -127,30 +136,30 @@ def main():
                 pode_pedir_truco = False
                 # Permite pedir truco em qualquer rodada se ainda não foi pedido
                 if truco_pode_ser_pedido:
-                    if truco_etapa == 0 and controller.pontos_truco == 1:
+                    if etapa_truco == 0 and controller.pontos_truco == 1:
                         pode_pedir_truco = True
-                    elif (truco_etapa == 1 and controller.pontos_truco == 2 and quem_pode_pedir_truco == primeiro_jogador):
+                    elif (etapa_truco == 1 and controller.pontos_truco == 2 and quem_pode_pedir_truco == primeiro_jogador):
                         pode_pedir_truco = True
-                    elif (truco_etapa == 2 and controller.pontos_truco == 3 and quem_pode_pedir_truco == primeiro_jogador):
+                    elif (etapa_truco == 2 and controller.pontos_truco == 3 and quem_pode_pedir_truco == primeiro_jogador):
                         pode_pedir_truco = True
-                pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
-                pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
+                pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
 
                 if primeiro_jogador == controller.jogador1:
                     mostrar_mao(primeiro_jogador)
                     # Só permite pedir truco se for a vez do humano pedir (quem_pode_pedir_truco == primeiro_jogador ou None no início)
                     prompt = montar_prompt_acao(
-                        pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador),
-                        controller.pontos_truco, pode_envido, pode_flor, primeiro_jogador)
+                        pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador),
+                        controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, primeiro_jogador)
                     acao = prompt_acao(prompt)
-                    if acao == 't' and pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
-                        resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
-                            controller, primeiro_jogador, segundo_jogador, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
+                    if acao == 't' and pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
+                        resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
+                            controller, primeiro_jogador, segundo_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                         if resultado:
                             continue
                         else:
                             break
-                    elif acao == 'e' and pode_envido:
+                    elif acao == 'e' and pode_pedir_envido:
                         controller.pedir_envido(primeiro_jogador)
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
@@ -175,11 +184,11 @@ def main():
                             else:
                                 calcular_pontuacao(controller.jogador2, 'envido', 1)
                         continue
-                    elif acao == 'f' and pode_flor:
+                    elif acao == 'f' and pode_pedir_flor:
                         flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
                         envido_pode_ser_pedido = False  # Garante que não pode pedir envido após flor
                         continue
-                    elif acao == 'f' and not pode_flor:
+                    elif acao == 'f' and not pode_pedir_flor:
                         mostrar_mensagem("Você não tem Flor!")
                     elif acao.isdigit():
                         carta_idx = int(acao)
@@ -192,14 +201,14 @@ def main():
                         mostrar_mensagem("Opção inválida! Digite T, E, F ou o número da carta.")
                 else:
                     # Bot
-                    pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
-                    pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
+                    pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                    pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                     # 1. Flor
-                    if pode_flor and primeiro_jogador.pedir_flor():
+                    if pode_pedir_flor and primeiro_jogador.pedir_flor():
                         flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
                         break
                     # 2. Envido
-                    elif pode_envido and not envido_ja_pedido and primeiro_jogador.pedir_envido():
+                    elif pode_pedir_envido and not envido_ja_pedido and primeiro_jogador.pedir_envido():
                         controller.pedir_envido(primeiro_jogador)
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
@@ -225,9 +234,9 @@ def main():
                                 calcular_pontuacao(controller.jogador1, 'envido', 1)
                         break
                     # 3. Truco
-                    elif pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador) and primeiro_jogador.pedir_truco():
-                        resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
-                            controller, primeiro_jogador, segundo_jogador, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
+                    elif pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador) and primeiro_jogador.pedir_truco():
+                        resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
+                            controller, primeiro_jogador, segundo_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                         if resultado:
                             continue
                         else:
@@ -245,17 +254,17 @@ def main():
                 print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
                 mostrar_mao(segundo_jogador)
                 pode_pedir_truco = truco_pode_ser_pedido and (
-                    (truco_etapa == 0 and controller.pontos_truco == 1) or
-                    (truco_etapa == 1 and controller.pontos_truco == 2) or
-                    (truco_etapa == 2 and controller.pontos_truco == 3)
+                    (etapa_truco == 0 and controller.pontos_truco == 1) or
+                    (etapa_truco == 1 and controller.pontos_truco == 2) or
+                    (etapa_truco == 2 and controller.pontos_truco == 3)
                 )
-                pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
-                pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
-                prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_envido, pode_flor, segundo_jogador)
+                pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
+                prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
                 acao = prompt_acao(prompt)
-                if acao == 't' and pode_pedir_truco and (truco_etapa > 0 and quem_pode_pedir_truco == segundo_jogador):
-                    resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
-                        controller, segundo_jogador, primeiro_jogador, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
+                if acao == 't' and pode_pedir_truco and (etapa_truco > 0 and quem_pode_pedir_truco == segundo_jogador):
+                    resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
+                        controller, segundo_jogador, primeiro_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                     if resultado:
                         segundo_jogador.mostrar_mao()
                         # Após aceitar o Truco, peça a carta apenas se o usuário ainda não digitou um número válido
@@ -290,7 +299,7 @@ def main():
             print(f'{segundo_jogador.nome} jogou: {carta2.numero} de {carta2.naipe}')
             
             # Determine o ganhador e ajusta a ordem para a próxima rodada
-            ganhador, vencedor_mao = controller.jogar_rodada(carta1, carta2, primeiro_jogador, segundo_jogador)
+            ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, primeiro_jogador, segundo_jogador)
 
             # Se alguém já venceu 2 rodadas, encerra imediatamente o loop de rodadas
             if controller.mao_decidida():
@@ -307,7 +316,7 @@ def main():
                 mao_encerrada = True
                 break
 
-            # NOVO: Encerra a mão imediatamente se o mesmo jogador venceu as duas primeiras rodadas (2x0)
+            # Encerra a mão imediatamente se o mesmo jogador venceu as duas primeiras rodadas (2x0)
             if len(controller.historico_rodadas) == 2 and (controller.historico_rodadas[0] == controller.historico_rodadas[1]) and controller.historico_rodadas[0] in [1,2]:
                 vencedor_mao = controller.processar_fim_mao()
                 if vencedor_mao:
@@ -323,14 +332,14 @@ def main():
                 break
 
             # Alternância correta: quem venceu a rodada começa a próxima
-            if ganhador == carta1:
+            if ganhador_rodada == carta1:
                 print(f'{primeiro_jogador.nome} venceu a rodada!')
                 # Ordem permanece: primeiro_jogador continua começando
-            elif ganhador == carta2:
+            elif ganhador_rodada == carta2:
                 print(f'{segundo_jogador.nome} venceu a rodada!')
                 # Inverte: segundo_jogador passa a ser o primeiro
                 primeiro_jogador, segundo_jogador = segundo_jogador, primeiro_jogador
-            elif ganhador == "Empate":
+            elif ganhador_rodada == "Empate":
                 print('Rodada empatada!')
                 # Em caso de empate, quem começou continua começando
             else:
