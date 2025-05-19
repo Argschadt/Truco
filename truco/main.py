@@ -324,11 +324,15 @@ def main():
                 carta1 = primeiro_jogador.jogarCarta(controller.cbr)
                 print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
                 mostrar_mao(segundo_jogador)
-                pode_pedir_truco = truco_pode_ser_pedido and (
-                    (etapa_truco == 0 and controller.pontos_truco == 1) or
-                    (etapa_truco == 1 and controller.pontos_truco == 2) or
-                    (etapa_truco == 2 and controller.pontos_truco == 3)
-                )
+                # CORREÇÃO: Só permite pedir truco se quem_pode_pedir_truco for o segundo_jogador
+                pode_pedir_truco = False
+                if truco_pode_ser_pedido:
+                    if etapa_truco == 0 and controller.pontos_truco == 1 and (quem_pode_pedir_truco is None or quem_pode_pedir_truco == segundo_jogador):
+                        pode_pedir_truco = True
+                    elif etapa_truco == 1 and controller.pontos_truco == 2 and quem_pode_pedir_truco == segundo_jogador:
+                        pode_pedir_truco = True
+                    elif etapa_truco == 2 and controller.pontos_truco == 3 and quem_pode_pedir_truco == segundo_jogador:
+                        pode_pedir_truco = True
                 pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                 pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                 prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
