@@ -3,7 +3,7 @@ from truco.core.game_controller import GameController
 from truco.core.rules import calcular_pontuacao
 import random
 
-def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_pedir_envido, pode_pedir_flor, jogador=None):
+def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_pedir_envido, pode_pedir_flor, jogador=None, pode_pedir_real_envido=False, pode_pedir_falta_envido=False):
     """
     Monta o texto do prompt de ação para o jogador, indicando as opções disponíveis.
     """
@@ -19,10 +19,18 @@ def montar_prompt_acao(pode_pedir_truco, pontos_truco, pode_pedir_envido, pode_p
         if prompt:
             prompt += ", "
         prompt += "[E]nvido"
+    if pode_pedir_real_envido:
+        if prompt:
+            prompt += ", "
+        prompt += "[R]eal Envido"
+    if pode_pedir_falta_envido:
+        if prompt:
+            prompt += ", "
+        prompt += "[F]alta Envido"
     if pode_pedir_flor:
         if prompt:
             prompt += ", "
-        prompt += "[F]lor"
+        prompt += "[L]Flor"
     if prompt:
         prompt += " ou "
     if jogador:
@@ -73,6 +81,88 @@ def processar_acao_truco(controller, jogador_que_pediu, jogador_que_responde, et
         else:
             controller.definir_proximo_primeiro(controller.jogador2)
         return False, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, True
+
+def processar_acao_envido(controller, quem_pediu, quem_responde, tipo_envido, pontos_envido, primeiro_da_partida):
+    """
+    Processa a ação de Envido, Real Envido e Falta Envido, incluindo escalada de apostas.
+    tipo_envido: 'envido', 'real_envido', 'falta_envido'
+    pontos_envido: pontos atuais da aposta
+    """
+    # Determina o valor da falta envido
+    pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
+    escalada = [
+        ('envido', 2),
+        ('real_envido', 3),
+        ('falta_envido', pontos_falta)
+    ]
+    # Define o próximo possível aumento
+    if tipo_envido == 'envido':
+        opcoes = ['s', 'r', 'f', 'n']  # aceitar, real envido, falta envido, recusar
+        prompt = f"{quem_responde.nome}, seu oponente pediu Envido (vale 2 pontos). Aceita [s], aumenta para Real Envido [r], Falta Envido [f] ou recusa [n]? "
+    elif tipo_envido == 'real_envido':
+        opcoes = ['s', 'f', 'n']  # aceitar, falta envido, recusar
+        prompt = f"{quem_responde.nome}, seu oponente pediu Real Envido (vale {pontos_envido} pontos). Aceita [s], aumenta para Falta Envido [f] ou recusa [n]? "
+    elif tipo_envido == 'falta_envido':
+        opcoes = ['s', 'n']  # aceitar, recusar
+        prompt = f"{quem_responde.nome}, seu oponente pediu Falta Envido (vale {pontos_falta} pontos). Aceita [s] ou recusa [n]? "
+    else:
+        return 0, None, None, False
+
+    # Bot ou humano
+    if hasattr(quem_responde, 'aceitar_envido') and quem_responde.nome == 'Bot':
+        # Simples: bot aceita se tem 25+ pontos, senão recusa, nunca aumenta
+        if tipo_envido == 'envido':
+            aceitou = quem_responde.aceitar_envido(2)
+            resposta = 's' if aceitou else 'n'
+        elif tipo_envido == 'real_envido':
+            aceitou = quem_responde.aceitar_envido(3)
+            resposta = 's' if aceitou else 'n'
+        else:  # falta envido
+            aceitou = quem_responde.aceitar_envido(pontos_falta)
+            resposta = 's' if aceitou else 'n'
+    else:
+        resposta = ''
+        while resposta not in opcoes:
+            resposta = input(prompt).strip().lower()
+            if resposta not in opcoes:
+                print(f"Opção inválida! Digite uma das opções: {', '.join(opcoes)}.")
+
+    # Processa resposta
+    if resposta == 's':
+        # Disputa de pontos de envido
+        pontos1 = quem_pediu.calcular_pontos_envido()
+        pontos2 = quem_responde.calcular_pontos_envido()
+        print(f"{quem_pediu.nome}: {pontos1} pontos de envido | {quem_responde.nome}: {pontos2} pontos de envido")
+        if pontos1 > pontos2:
+            calcular_pontuacao(quem_pediu, 'envido', pontos_envido)
+            print(f"{quem_pediu.nome} ganhou o {tipo_envido.replace('_', ' ').title()}!")
+            return pontos_envido, quem_pediu, tipo_envido, True
+        elif pontos2 > pontos1:
+            calcular_pontuacao(quem_responde, 'envido', pontos_envido)
+            print(f"{quem_responde.nome} ganhou o {tipo_envido.replace('_', ' ').title()}!")
+            return pontos_envido, quem_responde, tipo_envido, True
+        else:
+            # Desempate: quem iniciou a mão vence
+            if primeiro_da_partida is not None:
+                calcular_pontuacao(primeiro_da_partida, 'envido', pontos_envido)
+                print(f"Empate no {tipo_envido.replace('_', ' ').title()}! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha {pontos_envido} pontos!")
+                return pontos_envido, primeiro_da_partida, tipo_envido, True
+            else:
+                print(f"Empate no {tipo_envido.replace('_', ' ').title()}!")
+                return pontos_envido, None, tipo_envido, True
+    elif resposta == 'r' and tipo_envido == 'envido':
+        # Escala para Real Envido (Envido + Real Envido = 5 pontos)
+        print(f"{quem_responde.nome} aumentou para Real Envido!")
+        return processar_acao_envido(controller, quem_responde, quem_pediu, 'real_envido', 5, primeiro_da_partida)
+    elif resposta == 'f' and tipo_envido in ['envido', 'real_envido']:
+        # Escala para Falta Envido
+        print(f"{quem_responde.nome} aumentou para Falta Envido!")
+        return processar_acao_envido(controller, quem_responde, quem_pediu, 'falta_envido', pontos_falta, primeiro_da_partida)
+    else:
+        # Recusou
+        print(f"{quem_responde.nome} recusou o {tipo_envido.replace('_', ' ').title()}! {quem_pediu.nome} ganha 1 ponto.")
+        calcular_pontuacao(quem_pediu, 'envido', 1)
+        return 1, quem_pediu, tipo_envido, False
 
 def main():
     """
@@ -144,13 +234,15 @@ def main():
                         pode_pedir_truco = True
                 pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                 pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
+                pode_pedir_real_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_falta_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
 
                 if primeiro_jogador == controller.jogador1:
                     mostrar_mao(primeiro_jogador)
                     # Só permite pedir truco se for a vez do humano pedir (quem_pode_pedir_truco == primeiro_jogador ou None no início)
                     prompt = montar_prompt_acao(
                         pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador),
-                        controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, primeiro_jogador)
+                        controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, primeiro_jogador, pode_pedir_real_envido, pode_pedir_falta_envido)
                     acao = prompt_acao(prompt)
                     if acao == 't' and pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
                         resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
@@ -160,36 +252,24 @@ def main():
                         else:
                             break
                     elif acao == 'e' and pode_pedir_envido:
-                        controller.pedir_envido(primeiro_jogador)
+                        # Envido
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        print(f"{primeiro_jogador.nome} pediu Envido!")
-                        if segundo_jogador.aceitar_envido(2):
-                            print(f"{segundo_jogador.nome} aceitou o Envido!")
-                            pontos1 = primeiro_jogador.calcular_pontos_envido()
-                            pontos2 = segundo_jogador.calcular_pontos_envido()
-                            print(f"{primeiro_jogador.nome}: {pontos1} pontos de envido | {segundo_jogador.nome}: {pontos2} pontos de envido")
-                            if pontos1 > pontos2:
-                                calcular_pontuacao(controller.jogador1, 'envido', 2)
-                                print(f"{primeiro_jogador.nome} ganhou o Envido!")
-                            elif pontos2 > pontos1:
-                                calcular_pontuacao(controller.jogador2, 'envido', 2)
-                                print(f"{segundo_jogador.nome} ganhou o Envido!")
-                            else:
-                                print("Empate no Envido!")
-                        else:
-                            print(f"{segundo_jogador.nome} recusou o Envido! {primeiro_jogador.nome} ganha 1 ponto.")
-                            if controller.ultimo_envido == controller.jogador1:
-                                calcular_pontuacao(controller.jogador1, 'envido', 1)
-                            else:
-                                calcular_pontuacao(controller.jogador2, 'envido', 1)
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
                         continue
-                    elif acao == 'f' and pode_pedir_flor:
-                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
-                        envido_pode_ser_pedido = False  # Garante que não pode pedir envido após flor
+                    elif acao == 'r' and pode_pedir_real_envido:
+                        # Real Envido
+                        envido_ja_pedido = True
+                        envido_pode_ser_pedido = False
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
                         continue
-                    elif acao == 'f' and not pode_pedir_flor:
-                        mostrar_mensagem("Você não tem Flor!")
+                    elif acao == 'f' and pode_pedir_falta_envido:
+                        # Falta Envido
+                        envido_ja_pedido = True
+                        envido_pode_ser_pedido = False
+                        pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        continue
                     elif acao.isdigit():
                         carta_idx = int(acao)
                         if 0 <= carta_idx < len(primeiro_jogador.mao):
@@ -198,52 +278,37 @@ def main():
                         else:
                             mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(primeiro_jogador.mao)-1}.")
                     else:
-                        mostrar_mensagem("Opção inválida! Digite T, E, F ou o número da carta.")
+                        mostrar_mensagem("Opção inválida! Digite T, E, R, F ou o número da carta.")
                     # Se não pediu truco, passa a vez de pedir truco para o segundo jogador
                     if etapa_truco == 0 and rodada == 1 and quem_pode_pedir_truco is None:
                         quem_pode_pedir_truco = segundo_jogador
                 else:
                     # Bot
                     pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                    pode_pedir_real_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                    pode_pedir_falta_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                     pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                     # 1. Flor
                     if pode_pedir_flor and primeiro_jogador.pedir_flor():
                         flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
                         break
-                    # 2. Envido
+                    # 2. Envido, Real Envido ou Falta Envido
                     elif pode_pedir_envido and not envido_ja_pedido and primeiro_jogador.pedir_envido():
-                        controller.pedir_envido(primeiro_jogador)
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        print(f"{primeiro_jogador.nome} pediu Envido!")
-                        if segundo_jogador.aceitar_envido(2):
-                            print(f"{segundo_jogador.nome} aceitou o Envido!")
-                            pontos1 = primeiro_jogador.calcular_pontos_envido()
-                            pontos2 = segundo_jogador.calcular_pontos_envido()
-                            print(f"{primeiro_jogador.nome}: {pontos1} pontos de envido | {segundo_jogador.nome}: {pontos2} pontos de envido")
-                            if pontos1 > pontos2:
-                                calcular_pontuacao(controller.jogador2, 'envido', 2)
-                                print(f"{primeiro_jogador.nome} ganhou o Envido!")
-                            elif pontos2 > pontos1:
-                                calcular_pontuacao(controller.jogador1, 'envido', 2)
-                                print(f"{segundo_jogador.nome} ganhou o Envido!")
-                            else:
-                                print("Empate no Envido!")
-                        else:
-                            print(f"{segundo_jogador.nome} recusou o Envido! {primeiro_jogador.nome} ganha 1 ponto.")
-                            if controller.ultimo_envido == controller.jogador1:
-                                calcular_pontuacao(controller.jogador2, 'envido', 1)
-                            else:
-                                calcular_pontuacao(controller.jogador1, 'envido', 1)
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
                         break
-                    # 3. Truco
-                    elif pode_pedir_truco and (etapa_truco == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador) and primeiro_jogador.pedir_truco():
-                        resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
-                            controller, primeiro_jogador, segundo_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
-                        if resultado:
-                            continue
-                        else:
-                            break
+                    elif pode_pedir_real_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_real_envido') and primeiro_jogador.pedir_real_envido():
+                        envido_ja_pedido = True
+                        envido_pode_ser_pedido = False
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
+                        break
+                    elif pode_pedir_falta_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_falta_envido') and primeiro_jogador.pedir_falta_envido():
+                        envido_ja_pedido = True
+                        envido_pode_ser_pedido = False
+                        pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
+                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        break
                     else:
                         # Se não pediu truco, passa a vez de pedir truco para o segundo jogador
                         if etapa_truco == 0 and rodada == 1 and quem_pode_pedir_truco is None:
@@ -298,7 +363,7 @@ def main():
                         print(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                         continue
                 else:
-                    print("Opção inválida! Digite T, E, F ou o número da carta.")
+                    print("Opção inválida! Digite T, E, R, F ou o número da carta.")
                     continue
             # ...existing code...
             print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
