@@ -337,7 +337,7 @@ def main():
                     resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
                         controller, segundo_jogador, primeiro_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                     if resultado:
-                        segundo_jogador.mostrar_mao()
+                        segundo_jogador.mostrarMao()
                         # Após aceitar o Truco, peça a carta apenas se o usuário ainda não digitou um número válido
                         while True:
                             prompt2 = f"{segundo_jogador.nome}, digite o número da carta para jogar (0 a {len(segundo_jogador.mao)-1}): "
