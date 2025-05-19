@@ -262,7 +262,7 @@ def main():
                 pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                 prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
                 acao = prompt_acao(prompt)
-                if acao == 't' and pode_pedir_truco and (etapa_truco > 0 and quem_pode_pedir_truco == segundo_jogador):
+                if acao == 't' and pode_pedir_truco and (etapa_truco >= 0 and quem_pode_pedir_truco == segundo_jogador):
                     resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
                         controller, segundo_jogador, primeiro_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                     if resultado:
