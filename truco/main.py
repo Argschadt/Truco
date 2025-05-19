@@ -199,6 +199,9 @@ def main():
                             mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(primeiro_jogador.mao)-1}.")
                     else:
                         mostrar_mensagem("Opção inválida! Digite T, E, F ou o número da carta.")
+                    # Se não pediu truco, passa a vez de pedir truco para o segundo jogador
+                    if etapa_truco == 0 and rodada == 1 and quem_pode_pedir_truco is None:
+                        quem_pode_pedir_truco = segundo_jogador
                 else:
                     # Bot
                     pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
@@ -242,6 +245,9 @@ def main():
                         else:
                             break
                     else:
+                        # Se não pediu truco, passa a vez de pedir truco para o segundo jogador
+                        if etapa_truco == 0 and rodada == 1 and quem_pode_pedir_truco is None:
+                            quem_pode_pedir_truco = segundo_jogador
                         break
             if mao_encerrada:
                 break  # Sai do for rodada, inicia nova mão
@@ -262,7 +268,7 @@ def main():
                 pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                 prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
                 acao = prompt_acao(prompt)
-                if acao == 't' and pode_pedir_truco and (etapa_truco >= 0 and quem_pode_pedir_truco == segundo_jogador):
+                if (acao == 't' and pode_pedir_truco and etapa_truco >= 0 and (quem_pode_pedir_truco is None or quem_pode_pedir_truco == segundo_jogador)):
                     resultado, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
                         controller, segundo_jogador, primeiro_jogador, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, primeiro_da_partida)
                     if resultado:
