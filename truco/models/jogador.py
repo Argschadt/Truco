@@ -22,34 +22,7 @@ class Jogador():
         if ((len(self.mao)) == 3 and self.flor is False and (self.checaFlor())):
             print('[5] Flor')
             self.flor = True
-    def criarMao(self, baralho):
-        # Ensure jogador1 (Heitor) always gets a "flor" (3 cards of the same suit)
-        if self.nome == 'Heitor':
-            # Get all available suits in the deck
-            available_suits = list(set(carta.naipe for carta in baralho.cartas))
-            if available_suits:
-                chosen_suit = random.choice(available_suits)
-                
-                # Find all cards of the chosen suit
-                suit_cards = [carta for carta in baralho.cartas if carta.naipe == chosen_suit]
-                
-                # If we have at least 3 cards of the chosen suit, use them
-                if len(suit_cards) >= 3:
-                    # Remove these cards from the deck
-                    for carta in suit_cards[:3]:
-                        baralho.cartas.remove(carta)
-                    
-                    # Add them to the player's hand
-                    self.mao.extend(suit_cards[:3])
-                    
-                    # Flag that we have a flor
-                    self.flor = True
-                    return
-            
-            # Fallback: Standard hand creation if we couldn't create a flor
-            print("Warning: Couldn't create a flor for Heitor, using random cards instead.")
-            
-        # Standard hand creation for other players or fallback
+    def criarMao(self, baralho):        
         for i in range(3):
             self.mao.append(baralho.retirarCarta())
 

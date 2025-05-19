@@ -7,38 +7,6 @@ class Carta():
         self.numero = numero
         self.naipe = naipe
 
-    # def verificarCarta(self, carta_01, carta_02):
-    #     if self.CARTAS_VALORES[str(carta_01.numero)] > self.CARTAS_VALORES[str(carta_02.numero)]:
-    #         return carta_01
-    #     elif self.CARTAS_VALORES[str(carta_01.retornarNumero())] < self.CARTAS_VALORES[str(carta_02.retornarNumero())]:
-    #         return carta_02
-    #     else:
-    #         return "Empate"
-
-    # def verificarCarta(self, carta_01, carta_02):
-    #     print(1)
-    #     if (str(carta_01.numero)+" de "+carta_01.naipe) in self.MANILHA and (str(carta_02.numero)+" de "+carta_02.naipe) in self.MANILHA:
-    #         print(2)
-    #         if self.MANILHA[str(carta_01.numero)+" de "+carta_01.naipe] > self.MANILHA[str(carta_02.numero)+" de "+carta_02.naipe]:
-    #             return carta_01
-    #             print(3)
-    #         elif self.MANILHA[str(carta_02.numero)+" de "+carta_02.naipe] > self.MANILHA[str(carta_01.numero)+" de "+carta_01.naipe]:
-    #             return carta_02
-    #             print(4)
-    #     elif (str(carta_01.numero)+" de "+carta_01.naipe) in self.MANILHA:
-    #         return carta_01
-    #         print(5)
-    #     elif (str(carta_02.numero)+" de "+carta_02.naipe) in self.MANILHA:
-    #         return carta_02
-    #         print(6)
-    #     else:
-    #         if self.CARTAS_VALORES[str(carta_01.numero)] > self.CARTAS_VALORES[str(carta_02.numero)]:
-    #             return carta_01
-    #         elif self.CARTAS_VALORES[str(carta_01.retornarNumero())] < self.CARTAS_VALORES[str(carta_02.retornarNumero())]:
-    #             return carta_02
-    #         else:
-    #             return "Empate"
-
     def verificarCartaAlta(self, carta_01, carta_02):
         if (str(carta_01.numero)+" de "+carta_01.naipe) in MANILHA and (str(carta_02.numero)+" de "+carta_02.naipe) in MANILHA:
             if MANILHA[str(carta_01.numero)+" de "+carta_01.naipe] > MANILHA[str(carta_02.numero)+" de "+carta_02.naipe]:
