@@ -32,11 +32,16 @@ def processar_acao_truco(controller, quem_pediu, quem_responde, truco_etapa, tru
     truco_etapa += 1
     truco_pode_ser_pedido = False
     print(f"{quem_pediu.nome} pediu Truco! (vale {controller.pontos_truco} pontos)")
-    resposta = ''
-    while resposta not in ['s', 'n']:
-        resposta = input(f"{quem_responde.nome}, você aceita o Truco? (vale {controller.pontos_truco} pontos) [s/n]: ").strip().lower()
-        if resposta not in ['s', 'n']:
-            print("Por favor, digite 's' para aceitar ou 'n' para correr.")
+    # Decisão automática para bot
+    if hasattr(quem_responde, 'aceitar_truco') and quem_responde.nome == 'Bot':
+        aceitou = quem_responde.aceitar_truco(controller.pontos_truco)
+        resposta = 's' if aceitou else 'n'
+    else:
+        resposta = ''
+        while resposta not in ['s', 'n']:
+            resposta = input(f"{quem_responde.nome}, você aceita o Truco? (vale {controller.pontos_truco} pontos) [s/n]: ").strip().lower()
+            if resposta not in ['s', 'n']:
+                print("Por favor, digite 's' para aceitar ou 'n' para correr.")
     if resposta == 's':
         print(f"{quem_responde.nome} aceitou o Truco!")
         truco_pode_ser_pedido = True
@@ -78,6 +83,7 @@ def main():
     while not controller.fim_de_jogo():
         print(f'\nMão nova! Placar: {controller.jogador1.nome} {controller.jogador1.pontos} x {controller.jogador2.pontos} {controller.jogador2.nome}')
         controller.reiniciar_mao()
+        controller.historico_rodadas = []  # Limpa o histórico de rodadas no início de cada mão
         # Exibe as cartas do jogador humano antes de qualquer ação do bot
         if controller.jogador1.nome != 'Bot':
             controller.jogador1.mostrarMao()
@@ -107,34 +113,34 @@ def main():
         
         mao_encerrada = False  # Flag para encerrar a mão imediatamente
         for rodada in range(1, 4):
-            print(f'\nRodada {rodada}')
-            # Verifica se ainda há cartas disponíveis para jogar
-            if len(primeiro_jogador.mao) == 0 or len(segundo_jogador.mao) == 0:
-                print("Não há mais cartas para esta rodada!")
+            if controller.mao_decidida():
                 break
+            print(f'\nRodada {rodada}')
 
             # --- PROMPTS DE TRUCO, ENVIDO, FLOR E AUMENTOS ---
-            truco_pedido = False
-            envido_pedido = False
             if controller.pontos_truco > 1 and controller.pontos_truco < 4:
                 truco_pode_ser_pedido = True
             carta_idx = None  # Controle para garantir input único por rodada
             while True:
                 # Controle de propostas Truco/Retruco/Vale Quatro
                 pode_pedir_truco = False
+                # Permite pedir truco em qualquer rodada se ainda não foi pedido
                 if truco_pode_ser_pedido:
                     if truco_etapa == 0 and controller.pontos_truco == 1:
                         pode_pedir_truco = True
-                    elif truco_etapa == 1 and controller.pontos_truco == 2:
+                    elif (truco_etapa == 1 and controller.pontos_truco == 2 and quem_pode_pedir_truco == primeiro_jogador):
                         pode_pedir_truco = True
-                    elif truco_etapa == 2 and controller.pontos_truco == 3:
+                    elif (truco_etapa == 2 and controller.pontos_truco == 3 and quem_pode_pedir_truco == primeiro_jogador):
                         pode_pedir_truco = True
                 pode_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                 pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
 
                 if primeiro_jogador == controller.jogador1:
                     primeiro_jogador.mostrarMao()
-                    prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_envido, pode_flor, primeiro_jogador)
+                    # Só permite pedir truco se for a vez do humano pedir (quem_pode_pedir_truco == primeiro_jogador ou None no início)
+                    prompt = montar_prompt_acao(
+                        pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador),
+                        controller.pontos_truco, pode_envido, pode_flor, primeiro_jogador)
                     acao = input(prompt).strip().lower()
                     if acao == 't' and pode_pedir_truco and (truco_etapa == 0 or quem_pode_pedir_truco is None or quem_pode_pedir_truco == primeiro_jogador):
                         resultado, truco_etapa, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, mao_encerrada = processar_acao_truco(
@@ -169,7 +175,8 @@ def main():
                                 calcular_pontuacao(controller.jogador2, 'envido', 1)
                         continue
                     elif acao == 'f' and pode_flor:
-                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido)
+                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
+                        envido_pode_ser_pedido = False  # Garante que não pode pedir envido após flor
                         continue
                     elif acao == 'f' and not pode_flor:
                         print("Você não tem Flor!")
@@ -188,7 +195,7 @@ def main():
                     pode_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                     # 1. Flor
                     if pode_flor and primeiro_jogador.pedir_flor():
-                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido)
+                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
                         break
                     # 2. Envido
                     elif pode_envido and not envido_ja_pedido and primeiro_jogador.pedir_envido():
@@ -284,7 +291,7 @@ def main():
             # Determine o ganhador e ajusta a ordem para a próxima rodada
             ganhador, vencedor_mao = controller.jogar_rodada(carta1, carta2, primeiro_jogador, segundo_jogador)
 
-            # NOVO: Encerra a mão imediatamente se alguém venceu 2 rodadas
+            # Se alguém já venceu 2 rodadas, encerra imediatamente o loop de rodadas
             if controller.mao_decidida():
                 vencedor_mao = controller.processar_fim_mao()
                 if vencedor_mao:
@@ -350,7 +357,7 @@ def main():
     
     print(f'\nFIM DE JOGO! Vencedor: {controller.determinar_vencedor().nome} com {controller.determinar_vencedor().pontos} pontos!')
 
-def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido):
+def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida=None):
     """
     Resolve toda a lógica de Flor, Contra-Flor e Contra-Flor ao Resto.
     Retorna as flags (flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido) atualizadas.
@@ -360,19 +367,15 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
     print(f"{quem_pediu.nome} pediu Flor!")
     if not quem_responde.checaFlor():
         print(f"{quem_responde.nome} não tem Flor! {quem_pediu.nome} ganha 3 pontos.")
-        if controller.ultimo_flor == quem_pediu:
-            calcular_pontuacao(quem_pediu, 'flor', 3)
-        else:
-            calcular_pontuacao(quem_responde, 'flor', 3)
         envido_pode_ser_pedido = False
         return flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido
     else:
         # Ambos têm Flor
         if quem_responde.nome == 'Bot':
             pontos_bot = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
-            if 20 <= pontos_bot <= 30:
+            if 20 <= pontos_bot <= 28:
                 bot_decision = 'boa'
-            elif 31 <= pontos_bot <= 33:
+            elif 29 <= pontos_bot <= 33:
                 bot_decision = 'contra-flor'
             else:  # 34 ou mais
                 bot_decision = 'contra-flor e o resto'
@@ -382,33 +385,58 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                 calcular_pontuacao(quem_pediu, 'flor', 3)
             elif bot_decision == 'contra-flor':
                 print(f"Bot pediu Contra-Flor!")
-                pontos1 = quem_pediu.calcular_pontos_flor() if hasattr(quem_pediu, 'calcular_pontos_flor') else quem_pediu.calcular_pontos_envido()
-                pontos2 = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
-                print(f"{quem_pediu.nome}: {pontos1} pontos de Flor | {quem_responde.nome}: {pontos2} pontos de Flor")
-                if pontos1 > pontos2:
-                    calcular_pontuacao(quem_pediu, 'flor', 6)
-                    print(f"{quem_pediu.nome} ganhou a Contra-Flor!")
-                elif pontos2 > pontos1:
-                    calcular_pontuacao(quem_responde, 'flor', 6)
-                    print(f"{quem_responde.nome} ganhou a Contra-Flor!")
-                else:
-                    print("Empate na Contra-Flor!")
-            elif bot_decision == 'contra-flor e o resto':
-                print(f"Bot pediu Contra-Flor ao Resto!")
-                pontos1 = quem_pediu.calcular_pontos_flor() if hasattr(quem_pediu, 'calcular_pontos_flor') else quem_pediu.calcular_pontos_envido()
-                pontos2 = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
-                print(f"{quem_pediu.nome}: {pontos1} pontos de Flor | {quem_responde.nome}: {pontos2} pontos de Flor")
-                pontos_resto = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
-                if pontos1 > pontos2:
-                    calcular_pontuacao(quem_pediu, 'flor', pontos_resto)
-                    print(f"{quem_pediu.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
-                elif pontos2 > pontos1:
-                    calcular_pontuacao(quem_responde, 'flor', pontos_resto)
-                    print(f"{quem_responde.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
-                else:
-                    print("Empate na Contra-Flor ao Resto!")
-            envido_pode_ser_pedido = False
-            return flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido
+                while True:
+                    aceita = input(f"{quem_pediu.nome}, seu oponente pediu Contra-Flor (vale 6 pontos). Aceita [s], recusa [n] ou pede Contra-Flor ao Resto [r]? ").strip().lower()
+                    if aceita == 's':
+                        pontos1 = quem_pediu.calcular_pontos_flor() if hasattr(quem_pediu, 'calcular_pontos_flor') else quem_pediu.calcular_pontos_envido()
+                        pontos2 = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
+                        print(f"{quem_pediu.nome}: {pontos1} pontos de Flor | {quem_responde.nome}: {pontos2} pontos de Flor")
+                        if pontos1 > pontos2:
+                            calcular_pontuacao(quem_pediu, 'flor', 6)
+                            print(f"{quem_pediu.nome} ganhou a Contra-Flor!")
+                        elif pontos2 > pontos1:
+                            calcular_pontuacao(quem_responde, 'flor', 6)
+                            print(f"{quem_responde.nome} ganhou a Contra-Flor!")
+                        else:
+                            # Desempate: quem iniciou a mão vence
+                            if primeiro_da_partida is not None:
+                                calcular_pontuacao(primeiro_da_partida, 'flor', 6)
+                                print(f"Empate na Contra-Flor! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha 6 pontos!")
+                            else:
+                                print("Empate na Contra-Flor!")
+                        break
+                    elif aceita == 'n':
+                        print(f"{quem_pediu.nome} recusou a Contra-Flor! {quem_responde.nome} ganha 3 pontos.")
+                        calcular_pontuacao(quem_responde, 'flor', 3)
+                        break
+                    elif aceita == 'r':
+                        print(f"{quem_pediu.nome} pediu Contra-Flor ao Resto!")
+                        pontos_bot = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
+                        if pontos_bot >= 31:  # Bot aceita se tem mão forte
+                            print(f"Bot aceitou a Contra-Flor ao Resto!")
+                            pontos1 = quem_pediu.calcular_pontos_flor() if hasattr(quem_pediu, 'calcular_pontos_flor') else quem_pediu.calcular_pontos_envido()
+                            pontos2 = quem_responde.calcular_pontos_flor() if hasattr(quem_responde, 'calcular_pontos_flor') else quem_responde.calcular_pontos_envido()
+                            print(f"{quem_pediu.nome}: {pontos1} pontos de Flor | {quem_responde.nome}: {pontos2} pontos de Flor")
+                            pontos_resto = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
+                            if pontos1 > pontos2:
+                                calcular_pontuacao(quem_pediu, 'flor', pontos_resto)
+                                print(f"{quem_pediu.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
+                            elif pontos2 > pontos1:
+                                calcular_pontuacao(quem_responde, 'flor', pontos_resto)
+                                print(f"{quem_responde.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
+                            else:
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', pontos_resto)
+                                    print(f"Empate na Contra-Flor ao Resto! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha {pontos_resto} pontos!")
+                                else:
+                                    print("Empate na Contra-Flor ao Resto!")
+                        else:
+                            print(f"Bot recusou a Contra-Flor ao Resto! {quem_pediu.nome} ganha 6 pontos.")
+                            calcular_pontuacao(quem_pediu, 'flor', 6)
+                        break
+                    else:
+                        print("Opção inválida! Digite 's', 'n' ou 'r'.")
         else:
             while True:
                 resposta = input(f"{quem_responde.nome}, seu oponente pediu Flor! Você também tem Flor. Deseja pedir Contra-Flor [c], Contra-Flor ao Resto [r] ou desistir da flor [d]? ").strip().lower()
@@ -432,7 +460,12 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                                 calcular_pontuacao(quem_responde, 'flor', 6)
                                 print(f"{quem_responde.nome} ganhou a Contra-Flor!")
                             else:
-                                print("Empate na Contra-Flor!")
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', 6)
+                                    print(f"Empate na Contra-Flor! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha 6 pontos!")
+                                else:
+                                    print("Empate na Contra-Flor!")
                         else:
                             print(f"Bot pediu Contra-Flor ao Resto!")
                             pontos1 = quem_pediu.calcular_pontos_flor() if hasattr(quem_pediu, 'calcular_pontos_flor') else quem_pediu.calcular_pontos_envido()
@@ -446,7 +479,12 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                                 calcular_pontuacao(quem_responde, 'flor', pontos_resto)
                                 print(f"{quem_responde.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
                             else:
-                                print("Empate na Contra-Flor ao Resto!")
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', pontos_resto)
+                                    print(f"Empate na Contra-Flor ao Resto! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha {pontos_resto} pontos!")
+                                else:
+                                    print("Empate na Contra-Flor ao Resto!")
                         break
                     else:
                         aceita = input(f"{quem_pediu.nome}, seu oponente pediu Contra-Flor (vale 6 pontos). Aceita? [s/n]: ").strip().lower()
@@ -462,7 +500,12 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                                 calcular_pontuacao(quem_responde, 'flor', 6)
                                 print(f"{quem_responde.nome} ganhou a Contra-Flor!")
                             else:
-                                print("Empate na Contra-Flor!")
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', 6)
+                                    print(f"Empate na Contra-Flor! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha 6 pontos!")
+                                else:
+                                    print("Empate na Contra-Flor!")
                         else:
                             print(f"{quem_pediu.nome} recusou a Contra-Flor! {quem_responde.nome} ganha 3 pontos.")
                             calcular_pontuacao(quem_responde, 'flor', 3)
@@ -488,7 +531,12 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                                 calcular_pontuacao(quem_responde, 'flor', pontos_resto)
                                 print(f"{quem_responde.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
                             else:
-                                print("Empate na Contra-Flor ao Resto!")
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', pontos_resto)
+                                    print(f"Empate na Contra-Flor ao Resto! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha {pontos_resto} pontos!")
+                                else:
+                                    print("Empate na Contra-Flor ao Resto!")
                         else:
                             print(f"Bot recusou a Contra-Flor ao Resto! {quem_responde.nome} ganha 6 pontos.")
                             calcular_pontuacao(quem_responde, 'flor', 6)
@@ -508,7 +556,12 @@ def resolver_flor(quem_pediu, quem_responde, controller, calcular_pontuacao, flo
                                 calcular_pontuacao(quem_responde, 'flor', pontos_resto)
                                 print(f"{quem_responde.nome} ganhou a Contra-Flor ao Resto e fez {pontos_resto} pontos!")
                             else:
-                                print("Empate na Contra-Flor ao Resto!")
+                                # Desempate: quem iniciou a mão vence
+                                if primeiro_da_partida is not None:
+                                    calcular_pontuacao(primeiro_da_partida, 'flor', pontos_resto)
+                                    print(f"Empate na Contra-Flor ao Resto! {primeiro_da_partida.nome} (quem iniciou a mão) vence e ganha {pontos_resto} pontos!")
+                                else:
+                                    print("Empate na Contra-Flor ao Resto!")
                         else:
                             print(f"{quem_pediu.nome} recusou a Contra-Flor ao Resto! {quem_responde.nome} ganha 6 pontos.")
                             calcular_pontuacao(quem_responde, 'flor', 6)

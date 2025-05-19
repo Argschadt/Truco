@@ -34,34 +34,82 @@ class GameController:
     def jogar_rodada(self, carta1, carta2, primeiro_jogador, segundo_jogador):
         """
         Joga uma rodada, atualiza o histórico e retorna o ganhador da rodada.
-        O histórico registra 1 para quem começou a rodada, 2 para o segundo.
+        O histórico registra 1 para self.jogador1, 2 para self.jogador2.
         """
         ganhador = verificar_ganhador_rodada(carta1, carta2)
         if ganhador == carta1:
-            self.historico_rodadas.append(1)  # Primeiro jogador venceu
+            if primeiro_jogador == self.jogador1:
+                self.historico_rodadas.append(1)
+            else:
+                self.historico_rodadas.append(2)
         elif ganhador == carta2:
-            self.historico_rodadas.append(2)  # Segundo jogador venceu
+            if segundo_jogador == self.jogador1:
+                self.historico_rodadas.append(1)
+            else:
+                self.historico_rodadas.append(2)
         else:
             self.historico_rodadas.append(0)  # Empate
         return ganhador, None
 
     def mao_decidida(self):
         """Retorna True se algum jogador já venceu 2 rodadas nesta mão."""
-        return self.historico_rodadas.count(1) == 2 or self.historico_rodadas.count(2) == 2
+        return self.historico_rodadas.count(1) >= 2 or self.historico_rodadas.count(2) >= 2
 
     def processar_fim_mao(self):
         h = self.historico_rodadas
-        # Se algum jogador venceu 2 rodadas, ele vence a mão
+        # Garantir que empates são 0, vitórias jogador1 = 1, jogador2 = 2
+        # Caso clássico: alguém vence 2 rodadas
         if h.count(1) == 2:
             calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
             return self.jogador1
-        elif h.count(2) == 2:
+        if h.count(2) == 2:
             calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
             return self.jogador2
-        # Se foram jogadas 3 rodadas e ninguém venceu 2
+        # Caso: 3 rodadas jogadas
         if len(h) == 3:
-            # Se cada jogador venceu 1 rodada e a última não foi empate, quem venceu a última leva a mão
-            if h.count(1) == 1 and h.count(2) == 1:
+            # 3 empates
+            if h.count(0) == 3:
+                return None
+            # 2 empates e 1 vitória
+            if h.count(0) == 2:
+                if h[0] != 0:
+                    # Primeira rodada não foi empate, quem ganhou leva
+                    if h[0] == 1:
+                        calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                        return self.jogador1
+                    elif h[0] == 2:
+                        calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                        return self.jogador2
+                if h[1] != 0:
+                    # Segunda rodada não foi empate, quem ganhou leva
+                    if h[1] == 1:
+                        calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                        return self.jogador1
+                    elif h[1] == 2:
+                        calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                        return self.jogador2
+                if h[2] != 0:
+                    # Terceira rodada não foi empate, quem ganhou leva
+                    if h[2] == 1:
+                        calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                        return self.jogador1
+                    elif h[2] == 2:
+                        calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                        return self.jogador2
+                return None
+            # 1 empate e 2 vitórias diferentes (ex: [1,2,0] ou [2,1,0])
+            if h.count(0) == 1 and h.count(1) == 1 and h.count(2) == 1:
+                # Quem ganhou a primeira rodada leva
+                if h[0] == 1:
+                    calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                    return self.jogador1
+                elif h[0] == 2:
+                    calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                    return self.jogador2
+                else:
+                    return None
+            # 1 vitória para cada e a última decide
+            if h.count(1) == 1 and h.count(2) == 1 and h.count(0) == 0:
                 if h[2] == 1:
                     calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
                     return self.jogador1
@@ -69,17 +117,9 @@ class GameController:
                     calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
                     return self.jogador2
                 else:
-                    return None  # Empate real: 1,2,0 ou 2,1,0
-            # Se houve 3 empates
-            if h.count(0) == 3:
-                return None
-            # Se alguém venceu a última e não há 2 vitórias para ninguém, ele leva
-            if h[2] == 1:
-                calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
-                return self.jogador1
-            elif h[2] == 2:
-                calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
-                return self.jogador2
+                    return None
+            # 2 empates e 1 vitória (redundante, já coberto acima)
+            # 1 vitória e 2 empates (redundante, já coberto acima)
         return None
 
     def mostrar_estado(self):
