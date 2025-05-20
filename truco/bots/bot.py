@@ -25,7 +25,34 @@ class Bot():
     
     def criarMao(self, baralho):
         self.indices = [0, 1, 2]
-        # Fallback: criação padrão de mão
+        
+        """ # Obter todos os naipes disponíveis no baralho
+        available_suits = list(set(carta.naipe for carta in baralho.cartas))
+        if available_suits:
+            chosen_suit = random.choice(available_suits)
+            
+            # Encontrar todas as cartas do naipe escolhido
+            suit_cards = [carta for carta in baralho.cartas if carta.naipe == chosen_suit]
+            
+            # Se tivermos pelo menos 3 cartas do naipe escolhido, use-as
+            if len(suit_cards) >= 3:
+                # Remover estas cartas do baralho
+                for carta in suit_cards[:3]:
+                    baralho.cartas.remove(carta)
+                
+                # Adicionar à mão do bot
+                self.mao.extend(suit_cards[:3])
+                
+                # Marcar que temos uma flor
+                self.flor = True
+            else:
+                # Fallback: criação padrão de mão se não pudermos criar uma flor
+                print("Aviso: Não foi possível criar uma flor para o Bot, usando cartas aleatórias.")
+                for i in range(3):
+                    self.mao.append(baralho.retirarCarta())
+                self.flor = self.checaFlor()
+        else: """
+            # Fallback: criação padrão de mão
         for i in range(3):
             self.mao.append(baralho.retirarCarta())
         self.flor = self.checaFlor()

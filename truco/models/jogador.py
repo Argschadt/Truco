@@ -23,7 +23,7 @@ class Jogador():
             print('[5] Flor')
             self.flor = True
     def criarMao(self, baralho):
-        # Ensure jogador1 (Heitor) always gets a "flor" (3 cards of the same suit)
+        """ # Ensure jogador1 (Heitor) always gets a "flor" (3 cards of the same suit)
         if self.nome == 'Heitor':
             # Get all available suits in the deck
             available_suits = list(set(carta.naipe for carta in baralho.cartas))
@@ -47,7 +47,7 @@ class Jogador():
                     return
             
             # Fallback: Standard hand creation if we couldn't create a flor
-            print("Warning: Couldn't create a flor for Heitor, using random cards instead.")
+            print("Warning: Couldn't create a flor for Heitor, using random cards instead.") """
             
         # Standard hand creation for other players or fallback
         for i in range(3):
