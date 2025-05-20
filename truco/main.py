@@ -89,37 +89,53 @@ def processar_acao_envido(controller, quem_pediu, quem_responde, tipo_envido, po
     pontos_envido: pontos atuais da aposta
     """
     # Determina o valor da falta envido
-    pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
+    pontos_falta = 30 - max(controller.jogador1.pontos, controller.jogador2.pontos)
     escalada = [
         ('envido', 2),
         ('real_envido', 3),
         ('falta_envido', pontos_falta)
-    ]
-    # Define o próximo possível aumento
+    ]    # Define o próximo possível aumento
+    # Verificar se o jogador que responde tem Flor
+    tem_flor = quem_responde.checaFlor() if hasattr(quem_responde, 'checaFlor') else False
+    
     if tipo_envido == 'envido':
-        opcoes = ['s', 'r', 'f', 'n']  # aceitar, real envido, falta envido, recusar
-        prompt = f"{quem_responde.nome}, seu oponente pediu Envido (vale 2 pontos). Aceita [s], aumenta para Real Envido [r], Falta Envido [f] ou recusa [n]? "
+        if tem_flor:
+            opcoes = ['s', 'r', 'f', 'n', 'l']  # aceitar, real envido, falta envido, recusar, flor
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Envido. Aceita [s], aumenta para Real Envido [r], Falta Envido [f], recusa [n] ou pede Flor [l]? "
+        else:
+            opcoes = ['s', 'r', 'f', 'n']  # aceitar, real envido, falta envido, recusar
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Envido. Aceita [s], aumenta para Real Envido [r], Falta Envido [f] ou recusa [n]? "
     elif tipo_envido == 'real_envido':
-        opcoes = ['s', 'f', 'n']  # aceitar, falta envido, recusar
-        prompt = f"{quem_responde.nome}, seu oponente pediu Real Envido (vale {pontos_envido} pontos). Aceita [s], aumenta para Falta Envido [f] ou recusa [n]? "
+        if tem_flor:
+            opcoes = ['s', 'f', 'n', 'l']  # aceitar, falta envido, recusar, flor
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Real Envido. Aceita [s], aumenta para Falta Envido [f], recusa [n] ou pede Flor [l]? "
+        else:
+            opcoes = ['s', 'f', 'n']  # aceitar, falta envido, recusar
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Real Envido. Aceita [s], aumenta para Falta Envido [f] ou recusa [n]? "
     elif tipo_envido == 'falta_envido':
-        opcoes = ['s', 'n']  # aceitar, recusar
-        prompt = f"{quem_responde.nome}, seu oponente pediu Falta Envido (vale {pontos_falta} pontos). Aceita [s] ou recusa [n]? "
+        if tem_flor:
+            opcoes = ['s', 'n', 'l']  # aceitar, recusar, flor
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Falta Envido (vale {pontos_falta} pontos). Aceita [s], recusa [n] ou pede Flor [l]? "
+        else:
+            opcoes = ['s', 'n']  # aceitar, recusar
+            prompt = f"{quem_responde.nome}, {quem_pediu.nome} pediu Falta Envido (vale {pontos_falta} pontos). Aceita [s] ou recusa [n]? "
     else:
-        return 0, None, None, False
-
-    # Bot ou humano
+        return 0, None, None, False    # Bot ou humano
     if hasattr(quem_responde, 'aceitar_envido') and quem_responde.nome == 'Bot':
-        # Simples: bot aceita se tem 25+ pontos, senão recusa, nunca aumenta
-        if tipo_envido == 'envido':
-            aceitou = quem_responde.aceitar_envido(2)
-            resposta = 's' if aceitou else 'n'
-        elif tipo_envido == 'real_envido':
-            aceitou = quem_responde.aceitar_envido(3)
-            resposta = 's' if aceitou else 'n'
-        else:  # falta envido
-            aceitou = quem_responde.aceitar_envido(pontos_falta)
-            resposta = 's' if aceitou else 'n'
+        # Verifica se o Bot tem Flor, e se tiver, chama Flor automaticamente (tem precedência sobre o Envido)
+        if hasattr(quem_responde, 'checaFlor') and quem_responde.checaFlor():
+            resposta = 'l'  # chamar flor
+        else:
+            # Simples: bot aceita se tem 25+ pontos, senão recusa, nunca aumenta
+            if tipo_envido == 'envido':
+                aceitou = quem_responde.aceitar_envido(2)
+                resposta = 's' if aceitou else 'n'
+            elif tipo_envido == 'real_envido':
+                aceitou = quem_responde.aceitar_envido(3)
+                resposta = 's' if aceitou else 'n'
+            else:  # falta envido
+                aceitou = quem_responde.aceitar_envido(pontos_falta)
+                resposta = 's' if aceitou else 'n'
     else:
         resposta = ''
         while resposta not in opcoes:
@@ -157,7 +173,20 @@ def processar_acao_envido(controller, quem_pediu, quem_responde, tipo_envido, po
     elif resposta == 'f' and tipo_envido in ['envido', 'real_envido']:
         # Escala para Falta Envido
         print(f"{quem_responde.nome} aumentou para Falta Envido!")
-        return processar_acao_envido(controller, quem_responde, quem_pediu, 'falta_envido', pontos_falta, primeiro_da_partida)
+        return processar_acao_envido(controller, quem_responde, quem_pediu, 'falta_envido', pontos_falta, primeiro_da_partida)    
+    elif resposta == 'l' and quem_responde.checaFlor():
+        # Jogador pediu Flor, que tem precedência sobre o Envido
+        print(f"{quem_responde.nome} tem Flor! Envido cancelado.")
+        flor_ja_pedida = True
+        flor_pode_ser_pedida = False
+        envido_pode_ser_pedido = False
+        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(
+            quem_responde, quem_pediu, controller, calcular_pontuacao, 
+            flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, 
+            primeiro_da_partida
+        )
+        # Retorna as flags para o loop principal
+        return 0, None, None, True, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido
     else:
         # Recusou
         print(f"{quem_responde.nome} recusou o {tipo_envido.replace('_', ' ').title()}! {quem_pediu.nome} ganha 1 ponto.")
@@ -255,20 +284,27 @@ def main():
                         # Envido
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
+                        # Se Flor foi chamada, resultado terá 7 elementos
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         continue
                     elif acao == 'r' and pode_pedir_real_envido:
                         # Real Envido
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         continue
                     elif acao == 'f' and pode_pedir_falta_envido:
                         # Falta Envido
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
                         pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         continue
                     elif acao.isdigit():
                         carta_idx = int(acao)
@@ -296,18 +332,24 @@ def main():
                     elif pode_pedir_envido and not envido_ja_pedido and primeiro_jogador.pedir_envido():
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         break
                     elif pode_pedir_real_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_real_envido') and primeiro_jogador.pedir_real_envido():
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         break
                     elif pode_pedir_falta_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_falta_envido') and primeiro_jogador.pedir_falta_envido():
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
                         pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
-                        processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida)
+                        if isinstance(resultado, tuple) and len(resultado) == 7:
+                            _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         break
                     else:
                         # Se não pediu truco, passa a vez de pedir truco para o segundo jogador
