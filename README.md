@@ -6,18 +6,48 @@
 - **Número de cartas:** 40 (Não possui 8, 9, 10, 13).
 - **Distribuição de cartas:** Cada jogador recebe três cartas.
 - **Objetivo:** Fazer 12 pontos para ganhar.
-- **Sequência das cartas mais fortes:** A♠, A♣, 7♠, 7♦, 3, 2, 1, 12, 11, 7, 6, 5, 4.
+- **Sequência das cartas mais fortes:** A♠, A♣, 7♠, 7♦, 3, 2, A♦♥, 12, 11, 10, 7♣♥, 6, 5, 4.
 - **Naipes:** ♣Paus, ♥Copas, ♠Espadas, ♦Ouros.
 
- ### Definições:
+ ### Definições (Truco Gaudério):
 
-- **Vira:** É a carta que definirá as 4 manilhas.
-- **Manilhas:** São as cartas mais fortes do jogo.
-- **Rodadas:** Cada rodada é definida em melhor de três.
-- **Truco:** É um pedido de “aumento de aposta” que só pode ser feito na vez de cada jogador. Se nenhum jogador fizer o pedido, a partida valerá 1 **ponto. Se o Truco for pedido e o adversário aceitar, a partida passa a valer 3 pontos. Se o adversário não aceitar, o jogador que fez o pedido ganha um ponto.
-- **Seis:** É a mesma coisa que pedir truco porém só é permitido pedir depois que o adversário pedir truco e assim por diante no Nove e Doze.
-- **Mão de Onze:** A dupla que consegue chegar a 11 pontos na partida, tem o direito de olhar as cartas um do outro e analisar se irão ou não aceitar a partida. Caso a dupla aceite, a Mão de Onze já começa valendo 3 pontos. Se acharem que não será possível vencer a mão com tais cartas, podem optar por “Correr”, dando apenas 1 ponto à dupla adversária.
-- **Escurinho:** É a Mão de Onze especial, quando as duas duplas conseguem chegar a 11 pontos na partida. Todos os jogadores recebem as cartas "cobertas", isto é, viradas para baixo, e deverão jogar assim. Quem vencer a mão, vence a partida
+- **Mão:** Cada jogador recebe três cartas.
+- **Truco:** A qualquer momento, um jogador pode pedir truco para aumentar a aposta da rodada de 1 para 2 pontos. O adversário pode aceitar, recusar (dando 1 ponto ao desafiante) ou pedir "Retruco" aumentando para 3 pontos e depois o adversário pode pedir "Vale-Quatro" passando para 4 pontos.
+- **Flor:** Se um jogador tiver três cartas do mesmo naipe, pode pedir "Flor", que vale 3 pontos. O adversário pode aceitar, pedir "Contra-Flor" (6 pontos) ou recusar.
+- **Rodadas:** Cada mão é disputada em até três rodadas. Quem vencer duas, leva os pontos da mão.
+- **Empate:** Em caso de empate em uma rodada, vence quem ganhou a rodada anterior. Se empatar a primeira, a próxima rodada desempata.
+- **Pontuação:** O jogo é disputado até 30 pontos.
 
+---
 
-### A fundação/base dos códigos no presente projeto, está baseada no repositório original criado pelo usuário anthonyzutter, [disponível em neste link] (https://github.com/anthonyzutter/Truco-Jogo)
+## Sobre o Código
+
+O projeto é composto por módulos Python que implementam as regras do Truco Gaudério. As principais partes do código incluem:
+
+- **Baralho e Cartas:** Classes responsáveis por criar e embaralhar o baralho, além de distribuir as cartas para os jogadores.
+- **Jogador:** Classe que representa cada jogador, armazenando suas cartas e pontos.
+- **Lógica do Jogo:** Funções que controlam o fluxo do jogo, como distribuição de cartas, definição da vira, manilhas, rodadas e contagem de pontos.
+- **Interação:** O jogo pode ser jogado via terminal, onde o usuário escolhe as cartas e faz pedidos de truco, seis, nove e doze.
+
+O código é modularizado para facilitar a manutenção e entendimento das regras do jogo.
+
+---
+
+## Como Rodar o Programa
+
+1. **Pré-requisitos:**  
+   - Ter o Python 3 instalado em sua máquina.
+
+2. **Clonar o repositório ou baixar os arquivos:**  
+   ```
+   git clone https://github.com/Argschadt/Truco
+   cd Truco
+   ```
+
+3. **Executar o jogo:**  
+   No terminal, execute:
+   ```
+   python -m truco.main
+   ```
+
+4. **Siga as instruções exibidas no terminal para jogar.**
