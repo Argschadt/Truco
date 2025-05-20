@@ -306,6 +306,14 @@ def main():
                         if isinstance(resultado, tuple) and len(resultado) == 7:
                             _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         continue
+                    elif acao == 'l' and pode_pedir_flor:
+                        # Flor
+                        flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(
+                            primeiro_jogador, segundo_jogador, controller, calcular_pontuacao,
+                            flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido,
+                            primeiro_da_partida
+                        )
+                        continue
                     elif acao.isdigit():
                         carta_idx = int(acao)
                         if 0 <= carta_idx < len(primeiro_jogador.mao):
