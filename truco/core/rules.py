@@ -49,11 +49,3 @@ def validar_truco(estado_jogo, quem_pediu):
 def validar_envido(estado_jogo, quem_pediu):
     # Em breve: lógica para validar pedido de envido
     pass
-
-def verificar_mao_de_onze(jogador1, jogador2):
-    # Em breve: lógica para mão de onze
-    pass
-
-def verificar_escurinho(jogador1, jogador2):
-    # Em breve: lógica para escurinho
-    pass

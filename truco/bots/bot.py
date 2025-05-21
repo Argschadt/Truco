@@ -205,16 +205,6 @@ class Bot():
         # Exemplo simples: sempre aceita
         return True
 
-    def decidir_correr_mao_de_onze(self, estado_jogo=None):
-        """Decide se corre ou joga a mão de onze."""
-        # Exemplo simples: corre se a mão for muito ruim
-        return self.forcaMao < 20
-
-    def decidir_escurinho(self, estado_jogo=None):
-        """Decide como jogar no escurinho (mão de onze especial)."""
-        # Exemplo: joga normalmente, pode ser expandido
-        return True
-
     def registrar_resultado_rodada(self, resultado):
         """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
         self.rodadas += 1

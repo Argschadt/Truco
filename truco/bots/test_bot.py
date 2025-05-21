@@ -52,12 +52,6 @@ class TestBot(unittest.TestCase):
     def test_aceitar_flor(self):
         self.assertTrue(self.bot.aceitar_flor())
 
-    def test_decidir_correr_mao_de_onze(self):
-        self.bot.forcaMao = 10
-        self.assertTrue(self.bot.decidir_correr_mao_de_onze())
-        self.bot.forcaMao = 30
-        self.assertFalse(self.bot.decidir_correr_mao_de_onze())
-
     def test_resetar_estado_mao(self):
         self.bot.resetar_estado_mao()
         self.assertEqual(self.bot.mao, [])
