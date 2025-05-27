@@ -35,8 +35,6 @@ class CbrUpdated():
         if not self.csv_maos.exists():
             raise FileNotFoundError(f"Arquivo CSV de mãos não encontrado: {self.csv_maos}")
         df = pd.read_csv(self.csv_maos, index_col='idMao').fillna(0)
-        # Filtra apenas rodadas onde todas as rodadas foram ganhas pelo jogador 2
-        df = df[(df['ganhadorPrimeiraRodada'] == 2) & (df['ganhadorSegundaRodada'] == 2) & (df['ganhadorTerceiraRodada'] == 2)]
         colunas_string = [
             'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo', 
             'naipeCartaAltaHumano', 'naipeCartaMediaHumano', 'naipeCartaBaixaHumano',
@@ -58,18 +56,54 @@ class CbrUpdated():
         self.gerar_novo_CSV()
         if not self.csv_maos_cbrkit.exists():
             raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.csv_maos_cbrkit}")
+        # Garante que todos os campos usados na query estejam presentes no DataFrame
+        campos_necessarios = [
+            'jogadorMao',
+            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
+            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
+            'primeiraCartaRobo', 'primeiraCartaHumano',
+            'segundaCartaRobo', 'segundaCartaHumano',
+            'terceiraCartaRobo', 'terceiraCartaHumano',
+            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
+            'quemTruco', 'quemGanhouTruco',
+            'quemRetruco', 'quemGanhouRetruco',
+            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'pontosEnvidoRobo',
+            'quemPediuEnvido', 'quemGanhouEnvido',
+            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
+            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemFlor', 'quemGanhouFlor',
+            'quemContraFlor', 'quemGanhouContraFlor',
+            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
+        ]
+        df = pd.read_csv(self.csv_maos_cbrkit)
+        for campo in campos_necessarios:
+            if campo not in df.columns:
+                df[campo] = 0
+        df.to_csv(self.csv_maos_cbrkit, index=False)
         casebase = cbrkit.loaders.file(self.csv_maos_cbrkit)
         return casebase
     
     def montar_query_do_registro(self, registro):
         # Lista reduzida de campos essenciais
         campos = [
+            'jogadorMao',
             'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
+            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
             'primeiraCartaRobo', 'primeiraCartaHumano',
             'segundaCartaRobo', 'segundaCartaHumano',
             'terceiraCartaRobo', 'terceiraCartaHumano',
             'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-            'quemTruco', 'quemGanhouTruco', 'quemEnvidoEnvido', 'quemGanhouEnvido'
+            'quemTruco', 'quemGanhouTruco',
+            'quemRetruco', 'quemGanhouRetruco',
+            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'pontosEnvidoRobo',
+            'quemPediuEnvido', 'quemGanhouEnvido',
+            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
+            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemFlor', 'quemGanhouFlor',
+            'quemContraFlor', 'quemGanhouContraFlor',
+            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
         ]
         if hasattr(registro, 'to_dict'):
             if hasattr(registro, 'iloc'):
@@ -79,6 +113,7 @@ class CbrUpdated():
         else:
             registro_dict = dict(registro)
         query = {campo: registro_dict.get(campo, 0) for campo in campos}
+        print("Query montada:", query)
         return query
 
     def retornarSimilares(self, registro):
@@ -91,17 +126,7 @@ class CbrUpdated():
             print("ERRO: IndexError ao chamar o retrieval. O casebase está vazio ou a query não bate com os dados.")
             print("Detalhes:", e)
             return pd.DataFrame()
-
-        # Lista reduzida de colunas essenciais
-        casebase_columns = [
-            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
-            'primeiraCartaRobo', 'primeiraCartaHumano',
-            'segundaCartaRobo', 'segundaCartaHumano',
-            'terceiraCartaRobo', 'terceiraCartaHumano',
-            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-            'quemTruco', 'quemGanhouTruco', 'quemEnvidoEnvido', 'quemGanhouEnvido'
-        ]
-
+        
         if isinstance(result.casebase, dict):
             if all(isinstance(v, list) for v in result.casebase.values()):
                 jogadas_similares_df = pd.DataFrame(result.casebase)
@@ -112,6 +137,26 @@ class CbrUpdated():
         else:
             valid_indices = [i for i in result.ranking if i < len(result.casebase)]
             jogadas_similares_df = result.casebase.iloc[valid_indices]
+        # Lista reduzida de colunas essenciais
+        casebase_columns = [
+            'jogadorMao',
+            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
+            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
+            'primeiraCartaRobo', 'primeiraCartaHumano',
+            'segundaCartaRobo', 'segundaCartaHumano',
+            'terceiraCartaRobo', 'terceiraCartaHumano',
+            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
+            'quemTruco', 'quemGanhouTruco',
+            'quemRetruco', 'quemGanhouRetruco',
+            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'pontosEnvidoRobo',
+            'quemPediuEnvido', 'quemGanhouEnvido',
+            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
+            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemFlor', 'quemGanhouFlor',
+            'quemContraFlor', 'quemGanhouContraFlor',
+            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
+        ]
         for col in casebase_columns:
             if col not in jogadas_similares_df.columns:
                 jogadas_similares_df[col] = 0
@@ -119,25 +164,44 @@ class CbrUpdated():
         return jogadas_similares_df
 
     def global_similarity(self):
-        # Função de similaridade global baseada apenas nos atributos essenciais
+        # Função de similaridade global baseada nos atributos essenciais e novos campos
         sim_fn = cbrkit.sim.attribute_value(
             attributes={
-                'cartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'cartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'cartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'primeiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'primeiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
-                'segundaCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'segundaCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
-                'terceiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=12),
-                'terceiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=12),
+                'jogadorMao': cbrkit.sim.numbers.linear(min=1, max=2),
+                'cartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'cartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'cartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'naipeCartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
+                'naipeCartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
+                'naipeCartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
+                'primeiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'primeiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
+                'segundaCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'segundaCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
+                'terceiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
+                'terceiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
                 'ganhadorPrimeiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
                 'ganhadorSegundaRodada': cbrkit.sim.numbers.linear(min=0, max=2),
                 'ganhadorTerceiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemTruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemEnvidoEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
+                'pontosEnvidoRobo': cbrkit.sim.numbers.linear(min=0, max=33),
+                'quemPediuEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemPediuRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemPediuFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemFlor': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouFlor': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemContraFlorResto': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemGanhouContraFlorEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
             },
             aggregator=cbrkit.sim.aggregator("mean"),
         )
