@@ -339,14 +339,14 @@ def main():
                         if isinstance(resultado, tuple) and len(resultado) == 7:
                             _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         break
-                    elif pode_pedir_real_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_real_envido') and primeiro_jogador.pedir_real_envido(controller.cbr, controller):
+                    elif pode_pedir_real_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_real_envido') and primeiro_jogador.pedir_real_envido(controller.cbr):
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
                         resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
                         if isinstance(resultado, tuple) and len(resultado) == 7:
                             _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                         break
-                    elif pode_pedir_falta_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_falta_envido') and primeiro_jogador.pedir_falta_envido(controller.cbr, controller):
+                    elif pode_pedir_falta_envido and not envido_ja_pedido and hasattr(primeiro_jogador, 'pedir_falta_envido') and primeiro_jogador.pedir_falta_envido(controller.cbr):
                         envido_ja_pedido = True
                         envido_pode_ser_pedido = False
                         pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
@@ -363,6 +363,22 @@ def main():
             # Lógica com base em quem é o primeiro jogador
             if primeiro_jogador == controller.jogador1:  # Humano joga primeiro
                 carta1 = primeiro_jogador.jogarCarta(carta_idx)
+                # Bot
+                pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_real_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_falta_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
+                pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
+                # 1. Flor
+                if pode_pedir_flor and segundo_jogador.pedir_flor(controller.cbr):
+                    flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
+                    #continue
+                # 2. Envido
+                elif pode_pedir_envido and not envido_ja_pedido and segundo_jogador.pedir_envido(controller.cbr, controller):
+                    envido_ja_pedido = True
+                    envido_pode_ser_pedido = False
+                    resultado = processar_acao_envido(controller, segundo_jogador, primeiro_jogador, 'envido', 2, primeiro_da_partida)
+                    if isinstance(resultado, tuple) and len(resultado) == 7:
+                        _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                 carta2 = segundo_jogador.jogarCarta(controller.cbr, controller)
             else:  # Bot joga primeiro
                 carta1 = primeiro_jogador.jogarCarta(controller.cbr, controller)

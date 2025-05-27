@@ -109,9 +109,14 @@ class Bot():
 
         indice = self.pontuacaoCartas.index(carta_escolhida)
         self.indices.remove(indice)
-        self.pontuacaoCartas.remove(self.pontuacaoCartas[self.pontuacaoCartas.index(carta_escolhida)])
+        carta_jogada = self.mao.pop(indice)
+        # Após remover a carta da mão, recalcule a pontuação e ranking das cartas restantes
+        if self.mao:
+            self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
+        else:
+            self.pontuacaoCartas, self.maoRank = [], []
         self.indices = self.AjustaIndicesMao(len(self.indices))
-        return self.mao.pop(indice)
+        return carta_jogada
 
 
     def AjustaIndicesMao(self, tam_mao):
@@ -191,12 +196,12 @@ class Bot():
         # Cartas do bot
         if hasattr(self, 'pontuacaoCartas') and hasattr(self, 'maoRank') and self.pontuacaoCartas and self.maoRank and hasattr(self, 'mao'):
             try:
-                self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[self.maoRank.index("Alta")]
-                self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[self.maoRank.index("Media")]
-                self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[self.maoRank.index("Baixa")]
-                self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Alta")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Alta") else 0
-                self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Media")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Media") else 0
-                self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Baixa")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Baixa") else 0
+                self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[self.maoRank.index("Alta")] if "Alta" in self.maoRank else 0
+                self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[self.maoRank.index("Media")] if "Media" in self.maoRank else 0
+                self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[self.maoRank.index("Baixa")] if "Baixa" in self.maoRank else 0
+                self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Alta")], "naipe", None), 0) if "Alta" in self.maoRank else 0
+                self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Media")], "naipe", None), 0) if "Media" in self.maoRank else 0
+                self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Baixa")], "naipe", None), 0) if "Baixa" in self.maoRank else 0
             except Exception:
                 self.modeloRegistro.cartaAltaRobo = 0
                 self.modeloRegistro.cartaMediaRobo = 0
@@ -229,7 +234,7 @@ class Bot():
         self.modeloRegistro.quemGanhouValeQuatro = getattr(controller, 'quemGanhouValeQuatro', 0)
 
         # Envido
-        self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido() if hasattr(self, 'calcular_pontos_envido') else 0
+        self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido()
         self.modeloRegistro.quemPediuEnvido = getattr(controller, 'quemPediuEnvido', 0)
         self.modeloRegistro.quemGanhouEnvido = getattr(controller, 'quemGanhouEnvido', 0)
         self.modeloRegistro.quemPediuRealEnvido = getattr(controller, 'quemPediuRealEnvido', 0)
