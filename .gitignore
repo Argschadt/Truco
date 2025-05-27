@@ -17,3 +17,8 @@ venv/
 truco/__pycache__/*.pyc
 truco/**/*.pyc
 truco/__pycache__/main.cpython-311.pyc
+truco/bots/__pycache__/bot.cpython-311.pyc
+truco/bots/__pycache__/cbr_updated.cpython-311.pyc
+truco/core/__pycache__/game_controller.cpython-311.pyc
+truco/core/__pycache__/rules.cpython-311.pyc
+truco/models/__pycache__/modelo_registro.cpython-311.pyc
