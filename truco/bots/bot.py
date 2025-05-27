@@ -173,37 +173,56 @@ class Bot():
         return None
 
     # --- Métodos essenciais para Truco Gaúcho ---
-    def pedir_truco(self, estado_jogo=None):
-        """Decide se vai pedir truco (ou aumentar aposta). Pode usar heurística ou CBR."""
-        # Exemplo simples: pede truco se a mão for forte
+    def pedir_truco(self, cbr=None):
+        """Decide se vai pedir truco (ou aumentar aposta) usando CBR se disponível."""
+        if cbr is not None:
+            df = cbr.retornarSimilares(self.modeloRegistro)
+            if not df.empty and 'quemTruco' in df.columns:
+                # 1 = bot pediu truco, 0 = não pediu
+                maioria = df['quemTruco'].value_counts().idxmax()
+                return maioria == 1
         return self.forcaMao > 40
 
-    def aceitar_truco(self, valor_truco, estado_jogo=None):
-        """Decide se aceita o truco pedido pelo adversário."""
-        # Exemplo simples: aceita se a mão for razoável
+    def aceitar_truco(self, valor_truco, cbr=None):
+        """Decide se aceita o truco pedido pelo adversário usando CBR se disponível."""
+        if cbr is not None:
+            df = cbr.retornarSimilares(self.modeloRegistro)
+            if not df.empty and 'quemNegouTruco' in df.columns:
+                # 0 = não negou (aceitou), 1 = negou (recusou)
+                maioria = df['quemNegouTruco'].value_counts().idxmax()
+                return maioria == 0
+        # fallback heurístico
         return self.forcaMao > 25
 
-    def pedir_envido(self, estado_jogo=None):
-        """Decide se vai pedir envido."""
-        # Não pede Envido se tiver Flor
+    def pedir_envido(self, cbr=None):
+        """Decide se vai pedir envido usando CBR se disponível."""
         if self.flor:
             return False
+        if cbr is not None:
+            df = cbr.retornarSimilares(self.modeloRegistro)
+            if not df.empty and 'quemEnvidoEnvido' in df.columns:
+                maioria = df['quemEnvidoEnvido'].value_counts().idxmax()
+                return maioria == 1
         naipes = [carta.retornarNaipe() for carta in self.mao]
         return len(set(naipes)) < 3
 
-    def aceitar_envido(self, valor_envido, estado_jogo=None):
-        """Decide se aceita o envido pedido pelo adversário."""
-        # Exemplo simples: aceita se tem pelo menos 25 pontos de envido
+    def aceitar_envido(self, valor_envido, cbr=None):
+        """Decide se aceita o envido pedido pelo adversário usando CBR se disponível."""
+        if cbr is not None:
+            df = cbr.retornarSimilares(self.modeloRegistro)
+            if not df.empty and 'quemNegouEnvido' in df.columns:
+                maioria = df['quemNegouEnvido'].value_counts().idxmax()
+                return maioria == 0
         return self.calcular_pontos_envido() >= 25
 
-    def pedir_flor(self, estado_jogo=None):
-        """Decide se vai pedir flor."""
+    def pedir_flor(self, cbr=None):
+        """Decide se vai pedir flor usando CBR se disponível."""
+        if cbr is not None:
+            df = cbr.retornarSimilares(self.modeloRegistro)
+            if not df.empty and 'quemFlor' in df.columns:
+                maioria = df['quemFlor'].value_counts().idxmax()
+                return maioria == 1
         return self.flor
-
-    def aceitar_flor(self, estado_jogo=None):
-        """Decide se aceita a flor do adversário."""
-        # Exemplo simples: sempre aceita
-        return True
 
     def registrar_resultado_rodada(self, resultado):
         """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
