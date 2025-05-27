@@ -3,6 +3,13 @@ import random
 import pandas as pd
 from truco.models.modelo_registro import ModeloRegistro
 
+NAIPE_MAP = {
+    "espadas": 1,
+    "copas": 2,
+    "paus": 3,
+    "ouros": 4
+}
+
 class Bot():
 
     def __init__(self, nome):
@@ -61,8 +68,8 @@ class Bot():
         self.forcaMao = sum(self.pontuacaoCartas)
         self.inicializarRegistro()
     
-    def jogarCarta(self, cbr, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+    def jogarCarta(self, cbr, controller=None):
+        self.atualizar_modelo_registro(controller)
         # Garante que self.indices é uma lista válida
         if self.indices is None:
             self.indices = list(range(len(self.mao)))
@@ -173,105 +180,73 @@ class Bot():
     def avaliarEnvido(self):
         return None
 
-    def atualizar_modelo_registro(self, rodada=None, cartas_jogadas=None, ganhadores_rodadas=None, pontos=None, truco_atual=None, envido_atual=None, flor_atual=None, jogador_mao=None, 
-                                 cartaAltaRobo=None, cartaMediaRobo=None, cartaBaixaRobo=None,
-                                 naipeCartaAltaRobo=None, naipeCartaMediaRobo=None, naipeCartaBaixaRobo=None,
-                                 primeiraCartaRobo=None, primeiraCartaHumano=None,
-                                 segundaCartaRobo=None, segundaCartaHumano=None,
-                                 terceiraCartaRobo=None, terceiraCartaHumano=None,
-                                 quemTruco=None, quemGanhouTruco=None,
-                                 quemRetruco=None, quemGanhouRetruco=None,
-                                 quemValeQuatro=None, quemGanhouValeQuatro=None,
-                                 pontosEnvidoRobo=None,
-                                 quemPediuEnvido=None, quemGanhouEnvido=None,
-                                 quemPediuRealEnvido=None, quemGanhouRealEnvido=None,
-                                 quemPediuFaltaEnvido=None, quemGanhouFaltaEnvido=None,
-                                 quemFlor=None, quemGanhouFlor=None,
-                                 quemContraFlor=None, quemGanhouContraFlor=None,
-                                 quemContraFlorResto=None, quemGanhouContraFlorEnvido=None):
-        """
-        Atualiza o ModeloRegistro do bot com o estado atual do jogo.
-        Os parâmetros devem ser passados conforme disponíveis no contexto do jogo.
-        """
-        if jogador_mao is not None:
-            self.modeloRegistro.jogadorMao = jogador_mao
-        if cartaAltaRobo is not None:
-            self.modeloRegistro.cartaAltaRobo = cartaAltaRobo
-        if cartaMediaRobo is not None:
-            self.modeloRegistro.cartaMediaRobo = cartaMediaRobo
-        if cartaBaixaRobo is not None:
-            self.modeloRegistro.cartaBaixaRobo = cartaBaixaRobo
-        if naipeCartaAltaRobo is not None:
-            self.modeloRegistro.naipeCartaAltaRobo = naipeCartaAltaRobo
-        if naipeCartaMediaRobo is not None:
-            self.modeloRegistro.naipeCartaMediaRobo = naipeCartaMediaRobo
-        if naipeCartaBaixaRobo is not None:
-            self.modeloRegistro.naipeCartaBaixaRobo = naipeCartaBaixaRobo
-        if primeiraCartaRobo is not None:
-            self.modeloRegistro.primeiraCartaRobo = primeiraCartaRobo
-        if primeiraCartaHumano is not None:
-            self.modeloRegistro.primeiraCartaHumano = primeiraCartaHumano
-        if segundaCartaRobo is not None:
-            self.modeloRegistro.segundaCartaRobo = segundaCartaRobo
-        if segundaCartaHumano is not None:
-            self.modeloRegistro.segundaCartaHumano = segundaCartaHumano
-        if terceiraCartaRobo is not None:
-            self.modeloRegistro.terceiraCartaRobo = terceiraCartaRobo
-        if terceiraCartaHumano is not None:
-            self.modeloRegistro.terceiraCartaHumano = terceiraCartaHumano
-        if ganhadores_rodadas is not None:
-            self.modeloRegistro.ganhadorPrimeiraRodada = ganhadores_rodadas[0] if len(ganhadores_rodadas) > 0 else 2
-            self.modeloRegistro.ganhadorSegundaRodada = ganhadores_rodadas[1] if len(ganhadores_rodadas) > 1 else 2
-            self.modeloRegistro.ganhadorTerceiraRodada = ganhadores_rodadas[2] if len(ganhadores_rodadas) > 2 else 2
-        if quemTruco is not None:
-            self.modeloRegistro.quemTruco = quemTruco
-        if quemGanhouTruco is not None:
-            self.modeloRegistro.quemGanhouTruco = quemGanhouTruco
-        if quemRetruco is not None:
-            self.modeloRegistro.quemRetruco = quemRetruco
-        if quemGanhouRetruco is not None:
-            self.modeloRegistro.quemGanhouRetruco = quemGanhouRetruco
-        if quemValeQuatro is not None:
-            self.modeloRegistro.quemValeQuatro = quemValeQuatro
-        if quemGanhouValeQuatro is not None:
-            self.modeloRegistro.quemGanhouValeQuatro = quemGanhouValeQuatro
-        if pontosEnvidoRobo is not None:
-            self.modeloRegistro.pontosEnvidoRobo = pontosEnvidoRobo
-        if quemPediuEnvido is not None:
-            self.modeloRegistro.quemPediuEnvido = quemPediuEnvido
-        if quemGanhouEnvido is not None:
-            self.modeloRegistro.quemGanhouEnvido = quemGanhouEnvido
-        if quemPediuRealEnvido is not None:
-            self.modeloRegistro.quemPediuRealEnvido = quemPediuRealEnvido
-        if quemGanhouRealEnvido is not None:
-            self.modeloRegistro.quemGanhouRealEnvido = quemGanhouRealEnvido
-        if quemPediuFaltaEnvido is not None:
-            self.modeloRegistro.quemPediuFaltaEnvido = quemPediuFaltaEnvido
-        if quemGanhouFaltaEnvido is not None:
-            self.modeloRegistro.quemGanhouFaltaEnvido = quemGanhouFaltaEnvido
-        if quemFlor is not None:
-            self.modeloRegistro.quemFlor = quemFlor
-        if quemGanhouFlor is not None:
-            self.modeloRegistro.quemGanhouFlor = quemGanhouFlor
-        if quemContraFlor is not None:
-            self.modeloRegistro.quemContraFlor = quemContraFlor
-        if quemGanhouContraFlor is not None:
-            self.modeloRegistro.quemGanhouContraFlor = quemGanhouContraFlor
-        if quemContraFlorResto is not None:
-            self.modeloRegistro.quemContraFlorResto = quemContraFlorResto
-        if quemGanhouContraFlorEnvido is not None:
-            self.modeloRegistro.quemGanhouContraFlorEnvido = quemGanhouContraFlorEnvido
-        # Atualiza cartas do bot automaticamente se não passadas explicitamente
-        if (cartaAltaRobo is None or cartaMediaRobo is None or cartaBaixaRobo is None) and hasattr(self, 'pontuacaoCartas') and hasattr(self, 'maoRank') and self.pontuacaoCartas and self.maoRank:
+    def atualizar_modelo_registro(self, controller=None):
+        if controller is None:
+            return
+
+        # jogadorMao
+        if hasattr(controller, 'jogador_mao'):
+            self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2
+
+        # Cartas do bot
+        if hasattr(self, 'pontuacaoCartas') and hasattr(self, 'maoRank') and self.pontuacaoCartas and self.maoRank and hasattr(self, 'mao'):
             try:
                 self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[self.maoRank.index("Alta")]
                 self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[self.maoRank.index("Media")]
                 self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[self.maoRank.index("Baixa")]
+                self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Alta")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Alta") else 0
+                self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Media")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Media") else 0
+                self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Baixa")], "naipe", None), 0) if len(self.mao) > self.maoRank.index("Baixa") else 0
             except Exception:
-                pass
+                self.modeloRegistro.cartaAltaRobo = 0
+                self.modeloRegistro.cartaMediaRobo = 0
+                self.modeloRegistro.cartaBaixaRobo = 0
+                self.modeloRegistro.naipeCartaAltaRobo = 0
+                self.modeloRegistro.naipeCartaMediaRobo = 0
+                self.modeloRegistro.naipeCartaBaixaRobo = 0
 
-    def pedir_truco(self, cbr=None, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+        # Cartas jogadas (precisa ser implementado conforme o controle do jogo)
+        self.modeloRegistro.primeiraCartaRobo = getattr(self, 'primeiraCartaRobo', 0)
+        self.modeloRegistro.primeiraCartaHumano = getattr(self, 'primeiraCartaHumano', 0)
+        self.modeloRegistro.segundaCartaRobo = getattr(self, 'segundaCartaRobo', 0)
+        self.modeloRegistro.segundaCartaHumano = getattr(self, 'segundaCartaHumano', 0)
+        self.modeloRegistro.terceiraCartaRobo = getattr(self, 'terceiraCartaRobo', 0)
+        self.modeloRegistro.terceiraCartaHumano = getattr(self, 'terceiraCartaHumano', 0)
+
+        # Rodadas
+        if hasattr(controller, 'historico_rodadas'):
+            h = controller.historico_rodadas
+            self.modeloRegistro.ganhadorPrimeiraRodada = h[0] if len(h) > 0 else 2
+            self.modeloRegistro.ganhadorSegundaRodada = h[1] if len(h) > 1 else 2
+            self.modeloRegistro.ganhadorTerceiraRodada = h[2] if len(h) > 2 else 2
+
+        # Truco/Retruco/Vale Quatro
+        self.modeloRegistro.quemTruco = getattr(controller, 'quemTruco', 0)
+        self.modeloRegistro.quemGanhouTruco = getattr(controller, 'quemGanhouTruco', 0)
+        self.modeloRegistro.quemRetruco = getattr(controller, 'quemRetruco', 0)
+        self.modeloRegistro.quemGanhouRetruco = getattr(controller, 'quemGanhouRetruco', 0)
+        self.modeloRegistro.quemValeQuatro = getattr(controller, 'quemValeQuatro', 0)
+        self.modeloRegistro.quemGanhouValeQuatro = getattr(controller, 'quemGanhouValeQuatro', 0)
+
+        # Envido
+        self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido() if hasattr(self, 'calcular_pontos_envido') else 0
+        self.modeloRegistro.quemPediuEnvido = getattr(controller, 'quemPediuEnvido', 0)
+        self.modeloRegistro.quemGanhouEnvido = getattr(controller, 'quemGanhouEnvido', 0)
+        self.modeloRegistro.quemPediuRealEnvido = getattr(controller, 'quemPediuRealEnvido', 0)
+        self.modeloRegistro.quemGanhouRealEnvido = getattr(controller, 'quemGanhouRealEnvido', 0)
+        self.modeloRegistro.quemPediuFaltaEnvido = getattr(controller, 'quemPediuFaltaEnvido', 0)
+        self.modeloRegistro.quemGanhouFaltaEnvido = getattr(controller, 'quemGanhouFaltaEnvido', 0)
+
+        # Flor/Contra-Flor
+        self.modeloRegistro.quemFlor = getattr(controller, 'quemFlor', 0)
+        self.modeloRegistro.quemGanhouFlor = getattr(controller, 'quemGanhouFlor', 0)
+        self.modeloRegistro.quemContraFlor = getattr(controller, 'quemContraFlor', 0)
+        self.modeloRegistro.quemGanhouContraFlor = getattr(controller, 'quemGanhouContraFlor', 0)
+        self.modeloRegistro.quemContraFlorResto = getattr(controller, 'quemContraFlorResto', 0)
+        self.modeloRegistro.quemGanhouContraFlorEnvido = getattr(controller, 'quemGanhouContraFlorEnvido', 0)
+
+    def pedir_truco(self, cbr=None, controller=None):
+        self.atualizar_modelo_registro(controller)
         """Decide se vai pedir truco (ou aumentar aposta) usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
@@ -281,8 +256,8 @@ class Bot():
                 return maioria == 1
         return self.forcaMao > 40
 
-    def aceitar_truco(self, valor_truco, cbr=None, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+    def aceitar_truco(self, valor_truco, cbr=None, controller=None):
+        self.atualizar_modelo_registro(controller)
         """Decide se aceita o truco pedido pelo adversário usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
@@ -293,8 +268,8 @@ class Bot():
         # fallback heurístico
         return self.forcaMao > 25
 
-    def pedir_envido(self, cbr=None, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+    def pedir_envido(self, cbr=None, controller=None):
+        self.atualizar_modelo_registro(controller)
         """Decide se vai pedir envido usando CBR se disponível."""
         if self.flor:
             return False
@@ -306,8 +281,8 @@ class Bot():
         naipes = [carta.retornarNaipe() for carta in self.mao]
         return len(set(naipes)) < 3
 
-    def aceitar_envido(self, valor_envido, cbr=None, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+    def aceitar_envido(self, valor_envido, cbr=None, controller=None):
+        self.atualizar_modelo_registro(controller)
         """Decide se aceita o envido pedido pelo adversário usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
@@ -316,8 +291,8 @@ class Bot():
                 return maioria == 0
         return False
 
-    def pedir_flor(self, cbr=None, **game_state):
-        self.atualizar_modelo_registro(**game_state)
+    def pedir_flor(self, cbr=None, controller=None):
+        self.atualizar_modelo_registro(controller)
         """Decide se vai pedir flor usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
