@@ -9,6 +9,26 @@ from truco.core.jogo import Jogo
 from truco.bots.bot import Bot
 from truco.utils.pontos import MANILHA, CARTAS_VALORES
 
+CAMPOS_NECESSARIOS = [
+                        'jogadorMao',
+                        'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
+                        'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
+                        'primeiraCartaRobo', 'primeiraCartaHumano',
+                        'segundaCartaRobo', 'segundaCartaHumano',
+                        'terceiraCartaRobo', 'terceiraCartaHumano',
+                        'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
+                        'quemTruco', 'quemGanhouTruco',
+                        'quemRetruco',
+                        'quemValeQuatro',
+                        'pontosEnvidoRobo',
+                        'quemPediuEnvido', 'quemGanhouEnvido',
+                        'quemPediuRealEnvido',
+                        'quemPediuFaltaEnvido',
+                        'quemFlor',
+                        'quemContraFlor',
+                        'quemContraFlorResto', 'quemGanhouFlor',
+]   
+
 class CbrUpdated():
     def __init__(self):
         self.indice = 0
@@ -50,28 +70,8 @@ class CbrUpdated():
         df[colunas_string] = df[colunas_string].astype('int')
         df = df[(df >= 0).all(axis=1)]
         
-        campos_necessarios = [
-            'jogadorMao',
-            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
-            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
-            'primeiraCartaRobo', 'primeiraCartaHumano',
-            'segundaCartaRobo', 'segundaCartaHumano',
-            'terceiraCartaRobo', 'terceiraCartaHumano',
-            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-            'quemTruco', 'quemGanhouTruco',
-            'quemRetruco',
-            'quemValeQuatro',
-            'pontosEnvidoRobo',
-            'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido',
-            'quemPediuFaltaEnvido',
-            'quemFlor',
-            'quemContraFlor',
-            'quemContraFlorResto', 'quemGanhouFlor',
-        ]
-        
         for column in df.columns:
-            if column not in campos_necessarios:
+            if column not in CAMPOS_NECESSARIOS:
                 df = df.drop(column, axis=1)
         
         df.to_csv(self.dbtrucoimitacao_maos_cbrkit)
@@ -86,76 +86,22 @@ class CbrUpdated():
         return casebase
     
     def montar_query_do_registro(self, registro):
-        # Lista reduzida de campos essenciais
-        campos = [
-            'jogadorMao',
-            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
-            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
-            'primeiraCartaRobo', 'primeiraCartaHumano',
-            'segundaCartaRobo', 'segundaCartaHumano',
-            'terceiraCartaRobo', 'terceiraCartaHumano',
-            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-            'quemTruco', 'quemGanhouTruco',
-            'quemRetruco',
-            'quemValeQuatro',
-            'pontosEnvidoRobo',
-            'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido',
-            'quemPediuFaltaEnvido',
-            'quemFlor',
-            'quemContraFlor',
-            'quemContraFlorResto', 'quemGanhouFlor',
-        ]
         registro_dict = registro.to_dict()
         # Só adiciona campo se valor for diferente de 0
-        query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in campos) if valor != 0}
-        print("\nQuery montada:", query, "\n")
+        query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
+        #print("\nQuery montada:", query, "\n")
         return query
 
     def retornarSimilares(self, registro):
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, limit=3)
+        retriever = cbrkit.retrieval.build(global_sim, limit=10)
         query = self.montar_query_do_registro(registro)
-        result = cbrkit.retrieval.apply(self.casebase, query, retriever)
-        
-        print("\nResultado da busca:", result, "\n")
-        
-        if isinstance(result.casebase, dict):
-            if all(isinstance(v, list) for v in result.casebase.values()):
-                jogadas_similares_df = pd.DataFrame(result.casebase)
-            else:
-                jogadas_similares_df = pd.DataFrame([result.casebase])
-            valid_indices = [i for i in result.ranking if i < len(jogadas_similares_df)]
-            jogadas_similares_df = jogadas_similares_df.iloc[valid_indices]
-        else:
-            valid_indices = [i for i in result.ranking if i < len(result.casebase)]
-            jogadas_similares_df = result.casebase.iloc[valid_indices]
-        print("\nJogadas similares encontradas:", jogadas_similares_df, "\n")
-        # Lista reduzida de colunas essenciais
-        casebase_columns = [
-            'jogadorMao',
-            'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
-            'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
-            'primeiraCartaRobo', 'primeiraCartaHumano',
-            'segundaCartaRobo', 'segundaCartaHumano',
-            'terceiraCartaRobo', 'terceiraCartaHumano',
-            'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-            'quemTruco', 'quemGanhouTruco',
-            'quemRetruco',
-            'quemValeQuatro',
-            'pontosEnvidoRobo',
-            'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido',
-            'quemPediuFaltaEnvido',
-            'quemFlor',
-            'quemContraFlor',
-            'quemContraFlorResto', 'quemGanhouFlor',
-        ]
-        for col in casebase_columns:
-            if col not in jogadas_similares_df.columns:
-                jogadas_similares_df[col] = 0
-        jogadas_similares_df = jogadas_similares_df[casebase_columns]
-        return jogadas_similares_df
+        result = cbrkit.retrieval.apply(self.casebase, query, retriever)        
+        jogadas_similares_df = pd.DataFrame([result.casebase])
+        df_trad = jogadas_similares_df.transpose()
+        casos = [row[0] for _, row in df_trad.iterrows()]
+        df_final = pd.DataFrame(casos)
+        return df_final
 
     def global_similarity(self):
         # Função de similaridade global baseada nos atributos essenciais e novos campos
