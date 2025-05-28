@@ -218,9 +218,7 @@ class Bot():
         self.modeloRegistro.quemPediuEnvido = getattr(controller, 'quemPediuEnvido', 0)
         self.modeloRegistro.quemGanhouEnvido = getattr(controller, 'quemGanhouEnvido', 0)
         self.modeloRegistro.quemPediuRealEnvido = getattr(controller, 'quemPediuRealEnvido', 0)
-        self.modeloRegistro.quemGanhouRealEnvido = getattr(controller, 'quemGanhouRealEnvido', 0)
         self.modeloRegistro.quemPediuFaltaEnvido = getattr(controller, 'quemPediuFaltaEnvido', 0)
-        self.modeloRegistro.quemGanhouFaltaEnvido = getattr(controller, 'quemGanhouFaltaEnvido', 0)
 
         # Flor/Contra-Flor
         self.modeloRegistro.quemFlor = getattr(controller, 'quemFlor', 0)

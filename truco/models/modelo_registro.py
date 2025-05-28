@@ -28,15 +28,11 @@ class ModeloRegistro:
         self.quemPediuEnvido = 0
         self.quemGanhouEnvido = 0
         self.quemPediuRealEnvido = 0
-        self.quemGanhouRealEnvido = 0
         self.quemPediuFaltaEnvido = 0
-        self.quemGanhouFaltaEnvido = 0
         self.quemFlor = 0
         self.quemGanhouFlor = 0
         self.quemContraFlor = 0
-        self.quemGanhouContraFlor = 0
         self.quemContraFlorResto = 0
-        self.quemGanhouContraFlorEnvido = 0
 
     def to_dict(self):
         return self.__dict__

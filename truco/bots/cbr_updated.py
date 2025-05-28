@@ -50,13 +50,6 @@ class CbrUpdated():
         df[colunas_string] = df[colunas_string].astype('int')
         df = df[(df >= 0).all(axis=1)]
         
-        df.to_csv(self.dbtrucoimitacao_maos_cbrkit)
-
-    def atualizarDataframe(self):
-        self.gerar_novo_CSV()
-        if not self.dbtrucoimitacao_maos_cbrkit.exists():
-            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.dbtrucoimitacao_maos_cbrkit}")
-        # Garante que todos os campos usados na query estejam presentes no DataFrame
         campos_necessarios = [
             'jogadorMao',
             'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
@@ -70,16 +63,24 @@ class CbrUpdated():
             'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
-            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemPediuRealEnvido',
+            'quemPediuFaltaEnvido',
             'quemFlor',
             'quemContraFlor',
             'quemContraFlorResto', 'quemGanhouFlor',
         ]
+        
+        for column in df.columns:
+            if column not in campos_necessarios:
+                df = df.drop(column, axis=1)
+        
+        df.to_csv(self.dbtrucoimitacao_maos_cbrkit)
+
+    def atualizarDataframe(self):
+        self.gerar_novo_CSV()
+        if not self.dbtrucoimitacao_maos_cbrkit.exists():
+            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.dbtrucoimitacao_maos_cbrkit}")
         df = pd.read_csv(self.dbtrucoimitacao_maos_cbrkit)
-        for campo in campos_necessarios:
-            if campo not in df.columns:
-                df[campo] = 0
         df.to_csv(self.dbtrucoimitacao_maos_cbrkit, index=False)
         casebase = cbrkit.loaders.file(self.dbtrucoimitacao_maos_cbrkit)
         return casebase
@@ -99,30 +100,25 @@ class CbrUpdated():
             'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
-            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemPediuRealEnvido',
+            'quemPediuFaltaEnvido',
             'quemFlor',
             'quemContraFlor',
             'quemContraFlorResto', 'quemGanhouFlor',
         ]
-        if hasattr(registro, 'to_dict'):
-            if hasattr(registro, 'iloc'):
-                registro_dict = registro.iloc[0].to_dict()
-            else:
-                registro_dict = registro.to_dict()
-        else:
-            registro_dict = dict(registro)
-        query = {campo: registro_dict.get(campo, 0) for campo in campos}
+        registro_dict = registro.to_dict()
+        # Só adiciona campo se valor for diferente de 0
+        query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in campos) if valor != 0}
         print("\nQuery montada:", query, "\n")
         return query
 
     def retornarSimilares(self, registro):
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, limit=100)
+        retriever = cbrkit.retrieval.build(global_sim, limit=3)
         query = self.montar_query_do_registro(registro)
         result = cbrkit.retrieval.apply(self.casebase, query, retriever)
         
-        #print("\nResultado da busca:", result, "\n")
+        print("\nResultado da busca:", result, "\n")
         
         if isinstance(result.casebase, dict):
             if all(isinstance(v, list) for v in result.casebase.values()):
@@ -149,8 +145,8 @@ class CbrUpdated():
             'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
-            'quemPediuRealEnvido', 'quemGanhouRealEnvido',
-            'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
+            'quemPediuRealEnvido',
+            'quemPediuFaltaEnvido',
             'quemFlor',
             'quemContraFlor',
             'quemContraFlorResto', 'quemGanhouFlor',
@@ -189,9 +185,7 @@ class CbrUpdated():
                 'quemPediuEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemPediuRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemPediuFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemFlor': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouFlor': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
