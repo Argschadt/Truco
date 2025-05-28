@@ -257,13 +257,13 @@ class Bot():
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
             # Print apenas idMao e quemPediuEnvido de cada linha
-            for idx, row in df_final.iterrows():
+            for idx, row in df.iterrows():
                 print(f"idMao: {row.get('idMao')}, quemPediuEnvido: {row.get('quemPediuEnvido')}")
-            if not df_final.empty and 'quemPediuEnvido' in df_final.columns:
-                maioria = df_final['quemPediuEnvido'].value_counts().idxmax()
+            if not df.empty and 'quemPediuEnvido' in df.columns:
+                maioria = df['quemPediuEnvido'].value_counts().idxmax()
                 return maioria == 2
             else:
-                print(f"Colunas disponíveis no DataFrame retornado pelo CBR: {list(df_final.columns)}")
+                print(f"Colunas disponíveis no DataFrame retornado pelo CBR: {list(df.columns)}")
         print("Nao usou o CBR para pedir envido")
         return False
 
