@@ -177,25 +177,6 @@ class Bot():
         self.modeloRegistro.ganhadorPrimeiraRodada = 3
         self.modeloRegistro.ganhadorSegundaRodada = 3
         self.modeloRegistro.ganhadorTerceiraRodada = 3
-    
-    def avaliarJogadaHumano(self):
-        pass
-
-    def avaliarTruco(self, cbr):
-        if (self.forcaMao > 40):
-            return True
-        
-        else:
-            return False
-    
-    # implementar retruco do bot
-    def avaliarAumentarTruco(self, possibilidade, cbr):
-        if (possibilidade):
-            return True
-        return False
-
-    def avaliarEnvido(self):
-        return None
 
     def atualizar_modelo_registro(self, controller=None):
         if controller is None:
