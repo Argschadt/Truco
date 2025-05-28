@@ -207,7 +207,6 @@ def main():
     controller.proximo_primeiro = primeiro_da_partida
     print(f'Quem começa a primeira mão: {primeiro_da_partida.nome}')
     # Inicializa o jogo
-    controller.reiniciar_mao()
     
     while not controller.fim_de_jogo():
         print(f'\nMão nova! Placar: {controller.jogador1.nome} {controller.jogador1.pontos} x {controller.jogador2.pontos} {controller.jogador2.nome}')
@@ -574,7 +573,6 @@ def main():
                             mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                     continue
                 elif acao.isdigit():
-                    print("Entrou aqui?")
                     carta_idx = int(acao)
                     if 0 <= carta_idx < len(segundo_jogador.mao):
                         print(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")

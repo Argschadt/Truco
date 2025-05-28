@@ -23,7 +23,7 @@ class Jogo():
 
     def criarBot(self, nome, baralho):
         bot = Bot(nome)
-        bot.criarMao(baralho)
+        #bot.criarMao(baralho)
         return bot
 
     def verificarGanhador(self, carta1, carta2):

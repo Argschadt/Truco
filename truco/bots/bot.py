@@ -4,10 +4,10 @@ import pandas as pd
 from truco.models.modelo_registro import ModeloRegistro
 
 NAIPE_MAP = {
-    "espadas": 1,
-    "copas": 2,
-    "paus": 3,
-    "ouros": 4
+    "ESPADAS": 1,
+    "OUROS": 2,
+    "BASTOS": 3,
+    "COPAS": 4
 }
 
 class Bot():
@@ -65,7 +65,7 @@ class Bot():
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
-        self.inicializarRegistro()
+        self.inicializarRegistro(controller)
         self.atualizar_modelo_registro(controller)
     
     def jogarCarta(self, cbr, controller=None):
@@ -158,14 +158,25 @@ class Bot():
             return True
         return False
     
-    def inicializarRegistro(self):
-        self.modeloRegistro.jogadorMao = 1
-        self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[self.maoRank.index("Alta")]
-        self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[self.maoRank.index("Media")]
-        self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[self.maoRank.index("Baixa")]
-        self.modeloRegistro.ganhadorPrimeiraRodada = 2
-        self.modeloRegistro.ganhadorSegundaRodada = 2
-        self.modeloRegistro.ganhadorTerceiraRodada = 2
+    def inicializarRegistro(self, controller=None):
+        print("Inicializando registro do bot")
+        self.modeloRegistro.jogadorMao = 1 if controller and hasattr(controller, 'jogador_mao') else 2
+        # Definir índices de Alta, Media e Baixa se existirem
+        idx_alta = self.maoRank.index("Alta") if "Alta" in self.maoRank else None
+        idx_media = self.maoRank.index("Media") if "Media" in self.maoRank else None
+        idx_baixa = self.maoRank.index("Baixa") if "Baixa" in self.maoRank else None
+
+        self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[idx_alta] if idx_alta is not None else 0
+        self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[idx_media] if idx_media is not None else 0
+        self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[idx_baixa] if idx_baixa is not None else 0
+
+        self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(self.mao[idx_alta].retornarNaipe(), 0) if idx_alta is not None else 0
+        self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(self.mao[idx_media].retornarNaipe(), 0) if idx_media is not None else 0
+        self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(self.mao[idx_baixa].retornarNaipe(), 0) if idx_baixa is not None else 0
+
+        self.modeloRegistro.ganhadorPrimeiraRodada = 3
+        self.modeloRegistro.ganhadorSegundaRodada = 3
+        self.modeloRegistro.ganhadorTerceiraRodada = 3
     
     def avaliarJogadaHumano(self):
         pass
@@ -187,44 +198,28 @@ class Bot():
         return None
 
     def atualizar_modelo_registro(self, controller=None):
+        print("Atualizando modelo de registro do bot")
         if controller is None:
             return
 
         # jogadorMao
         if hasattr(controller, 'jogador_mao'):
-            self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2
-
-        # Cartas do bot
-        if hasattr(self, 'pontuacaoCartas') and hasattr(self, 'maoRank') and self.pontuacaoCartas and self.maoRank and hasattr(self, 'mao'):
-            try:
-                self.modeloRegistro.cartaAltaRobo = self.pontuacaoCartas[self.maoRank.index("Alta")] if "Alta" in self.maoRank else 0
-                self.modeloRegistro.cartaMediaRobo = self.pontuacaoCartas[self.maoRank.index("Media")] if "Media" in self.maoRank else 0
-                self.modeloRegistro.cartaBaixaRobo = self.pontuacaoCartas[self.maoRank.index("Baixa")] if "Baixa" in self.maoRank else 0
-                self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Alta")], "naipe", None), 0) if "Alta" in self.maoRank else 0
-                self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Media")], "naipe", None), 0) if "Media" in self.maoRank else 0
-                self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(getattr(self.mao[self.maoRank.index("Baixa")], "naipe", None), 0) if "Baixa" in self.maoRank else 0
-            except Exception:
-                self.modeloRegistro.cartaAltaRobo = 0
-                self.modeloRegistro.cartaMediaRobo = 0
-                self.modeloRegistro.cartaBaixaRobo = 0
-                self.modeloRegistro.naipeCartaAltaRobo = 0
-                self.modeloRegistro.naipeCartaMediaRobo = 0
-                self.modeloRegistro.naipeCartaBaixaRobo = 0
+            self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2                    
 
         # Cartas jogadas (precisa ser implementado conforme o controle do jogo)
-        self.modeloRegistro.primeiraCartaRobo = getattr(self, 'primeiraCartaRobo', 0)
-        self.modeloRegistro.primeiraCartaHumano = getattr(self, 'primeiraCartaHumano', 0)
-        self.modeloRegistro.segundaCartaRobo = getattr(self, 'segundaCartaRobo', 0)
-        self.modeloRegistro.segundaCartaHumano = getattr(self, 'segundaCartaHumano', 0)
-        self.modeloRegistro.terceiraCartaRobo = getattr(self, 'terceiraCartaRobo', 0)
-        self.modeloRegistro.terceiraCartaHumano = getattr(self, 'terceiraCartaHumano', 0)
+        self.modeloRegistro.primeiraCartaRobo = getattr(self, 'primeiraCartaRobo', -1)
+        self.modeloRegistro.primeiraCartaHumano = getattr(self, 'primeiraCartaHumano', -1)
+        self.modeloRegistro.segundaCartaRobo = getattr(self, 'segundaCartaRobo', -1)
+        self.modeloRegistro.segundaCartaHumano = getattr(self, 'segundaCartaHumano', -1)
+        self.modeloRegistro.terceiraCartaRobo = getattr(self, 'terceiraCartaRobo', -1)
+        self.modeloRegistro.terceiraCartaHumano = getattr(self, 'terceiraCartaHumano', -1)
 
         # Rodadas
         if hasattr(controller, 'historico_rodadas'):
             h = controller.historico_rodadas
-            self.modeloRegistro.ganhadorPrimeiraRodada = h[0] if len(h) > 0 else 2
-            self.modeloRegistro.ganhadorSegundaRodada = h[1] if len(h) > 1 else 2
-            self.modeloRegistro.ganhadorTerceiraRodada = h[2] if len(h) > 2 else 2
+            self.modeloRegistro.ganhadorPrimeiraRodada = h[0] if len(h) > 0 else 0
+            self.modeloRegistro.ganhadorSegundaRodada = h[1] if len(h) > 1 else 0
+            self.modeloRegistro.ganhadorTerceiraRodada = h[2] if len(h) > 2 else 0
 
         # Truco/Retruco/Vale Quatro
         self.modeloRegistro.quemTruco = getattr(controller, 'quemTruco', 0)
