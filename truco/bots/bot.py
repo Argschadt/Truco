@@ -32,7 +32,7 @@ class Bot():
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
-        """ # Obter todos os naipes disponíveis no baralho
+        # Obter todos os naipes disponíveis no baralho
         available_suits = list(set(carta.naipe for carta in baralho.cartas))
         if available_suits:
             chosen_suit = random.choice(available_suits)
@@ -57,11 +57,11 @@ class Bot():
                 for i in range(3):
                     self.mao.append(baralho.retirarCarta())
                 self.flor = self.checaFlor()
-        else: """
+        else: 
             # Fallback: criação padrão de mão
-        for i in range(3):
-            self.mao.append(baralho.retirarCarta())
-        self.flor = self.checaFlor()
+            for i in range(3):
+                self.mao.append(baralho.retirarCarta())
+            self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
@@ -72,13 +72,12 @@ class Bot():
     
     def jogarCarta(self, cbr, controller=None):
         self.atualizar_modelo_registro(controller)
-        # Garante que self.indices é uma lista válida
         if self.indices is None:
             self.indices = list(range(len(self.mao)))
+        if not self.mao:
+            return None
         df = cbr.retornarSimilares(self.modeloRegistro)
-        carta_escolhida = 0
         ordem_carta_jogada = 'CartaRobo'
-
         if self.indices is not None and len(self.indices) == 3:
             ordem_carta_jogada = 'primeira' + ordem_carta_jogada
         elif self.indices is not None and len(self.indices) == 2:
@@ -86,37 +85,44 @@ class Bot():
         elif self.indices is not None and len(self.indices) == 1:
             ordem_carta_jogada = 'terceira' + ordem_carta_jogada
 
-        # Protege contra DataFrame vazio ou coluna inexistente
-        if ordem_carta_jogada not in df.columns or df.empty:
-            # fallback: joga a menor carta disponível
-            indice = 0
+        # Se não há CBR ou coluna correspondente, joga a menor carta
+        if df.empty or ordem_carta_jogada not in df.columns:
+            indice = self.pontuacaoCartas.index(min(self.pontuacaoCartas))
             self.indices.remove(indice)
             self.pontuacaoCartas.pop(indice)
             self.indices = self.AjustaIndicesMao(len(self.indices))
             return self.mao.pop(indice)
 
-        for i in reversed(range(len(df[ordem_carta_jogada].value_counts().index.to_list()))): 
-            aux = df[ordem_carta_jogada].value_counts().index.to_list()[i]
-            if carta_escolhida in self.pontuacaoCartas:
-                carta_escolhida = aux
-
-        if carta_escolhida == 0:
-            valores = df[ordem_carta_jogada].value_counts().index.to_list()
-            if valores:
-                valor_referencia = valores[0]
-            else:
-                # Valor padrão caso não haja valores (exemplo: escolha aleatória)
-                valor_referencia = min(self.pontuacaoCartas)  # joga a menor carta
-            carta_escolhida = min(self.pontuacaoCartas, key=lambda x:abs(x-valor_referencia))
-
+        # Verifica qual carta (alta, media, baixa) foi jogada pela maioria
+        cartas_mao = {
+            'Alta': self.modeloRegistro.cartaAltaRobo,
+            'Media': self.modeloRegistro.cartaMediaRobo,
+            'Baixa': self.modeloRegistro.cartaBaixaRobo
+        }
+        # Conta quantas vezes cada valor de carta da mão aparece nas queries
+        counts = {'Alta': 0, 'Media': 0, 'Baixa': 0}
+        for valor in df[ordem_carta_jogada]:
+            for tipo, carta in cartas_mao.items():
+                if valor == carta:
+                    counts[tipo] += 1
+        # Decide pela maioria
+        tipo_maioria = max(counts, key=counts.get)
+        carta_escolhida = cartas_mao[tipo_maioria]
+        # Se a carta escolhida não está mais na mão (já foi jogada), pega a menor
+        if carta_escolhida not in self.pontuacaoCartas:
+            carta_escolhida = min(self.pontuacaoCartas)
         indice = self.pontuacaoCartas.index(carta_escolhida)
         self.indices.remove(indice)
         carta_jogada = self.mao.pop(indice)
-        # Após remover a carta da mão, recalcule a pontuação e ranking das cartas restantes
-        if self.mao:
+        # Atualiza pontuação e ranking de acordo com o número de cartas restantes
+        if len(self.mao) >= 3:
             self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
+        elif len(self.mao) > 0:
+            # Para 2 ou 1 carta, calcula pontuação simples
+            self.pontuacaoCartas = [carta.retornarNumero() for carta in self.mao]
+            self.maoRank = ["Alta" if i == 0 else "Baixa" for i in range(len(self.mao))]
         else:
-            self.pontuacaoCartas, self.maoRank = [], []        
+            self.pontuacaoCartas, self.maoRank = [], []
             self.indices = self.AjustaIndicesMao(len(self.indices))
         return carta_jogada
 
@@ -277,7 +283,8 @@ class Bot():
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemFlor' in df.columns:
                 maioria = df['quemFlor'].value_counts().idxmax()
-                return maioria == 1
+                return maioria == 2
+        print("Nao usou o CBR para pedir flor")
         return self.flor    
     
     def registrar_resultado_rodada(self, resultado, controller=None):

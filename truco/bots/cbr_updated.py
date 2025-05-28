@@ -21,7 +21,7 @@ CAMPOS_NECESSARIOS = [
                         'quemRetruco',
                         'quemValeQuatro',
                         'pontosEnvidoRobo',
-                        'quemPediuEnvido', 'quemGanhouEnvido',
+                        'quemPediuEnvido', 'quemGanhouEnvido', 'quemNegouEnvido'
                         'quemPediuRealEnvido',
                         'quemPediuFaltaEnvido',
                         'quemFlor',
@@ -92,9 +92,23 @@ class CbrUpdated():
         #print("\nQuery montada:", query, "\n")
         return query
 
+    def atualizarCaseBase(self, jogadorMao):
+        """Atualiza o casebase para conter apenas casos com jogadorMao igual ao informado."""
+        # Carrega o DataFrame completo
+        df = pd.read_csv(self.dbtrucoimitacao_maos_cbrkit)
+        # Filtra pelo jogadorMao
+        df_filtrado = df[df['jogadorMao'] == jogadorMao]
+        # Salva em um arquivo temporário
+        temp_path = self.base_dir / f'dbtrucoimitacao_maos_cbrkit_jogadorMao_{jogadorMao}.csv'
+        df_filtrado.to_csv(temp_path, index=False)
+        # Atualiza o casebase para usar apenas o filtrado
+        self.casebase = cbrkit.loaders.file(temp_path)
+
     def retornarSimilares(self, registro):
+        # Atualiza o casebase para conter apenas casos do jogadorMao do registro
+        self.atualizarCaseBase(registro.jogadorMao)
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, limit=10)
+        retriever = cbrkit.retrieval.build(global_sim, limit=100)
         query = self.montar_query_do_registro(registro)
         result = cbrkit.retrieval.apply(self.casebase, query, retriever)        
         jogadas_similares_df = pd.DataFrame([result.casebase])
@@ -129,6 +143,7 @@ class CbrUpdated():
                 'quemValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
                 'pontosEnvidoRobo': cbrkit.sim.numbers.linear(min=0, max=33),
                 'quemPediuEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemNegouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemPediuRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemPediuFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),

@@ -27,6 +27,7 @@ class ModeloRegistro:
         self.pontosEnvidoRobo = 0
         self.quemPediuEnvido = 0
         self.quemGanhouEnvido = 0
+        self.quemNegouEnvido = 0
         self.quemPediuRealEnvido = 0
         self.quemPediuFaltaEnvido = 0
         self.quemFlor = 0

@@ -327,7 +327,7 @@ def main():
                     pode_pedir_falta_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                     pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
                     # 1. Flor
-                    if pode_pedir_flor and primeiro_jogador.pedir_flor(controller.cbr):
+                    if pode_pedir_flor and primeiro_jogador.pedir_flor(controller.cbr, controller):
                         flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(primeiro_jogador, segundo_jogador, controller, calcular_pontuacao, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido, primeiro_da_partida)
                         break
                     # 2. Envido, Real Envido ou Falta Envido
