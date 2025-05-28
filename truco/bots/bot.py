@@ -194,6 +194,8 @@ class Bot():
         self.modeloRegistro.ganhadorPrimeiraRodada = 3
         self.modeloRegistro.ganhadorSegundaRodada = 3
         self.modeloRegistro.ganhadorTerceiraRodada = 3
+        
+        self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido()
 
     def atualizar_modelo_registro(self, controller=None):
         if controller is None:
@@ -231,7 +233,6 @@ class Bot():
         self.modeloRegistro.quemValeQuatro = getattr(controller, 'quemValeQuatro', 0)
 
         # Envido
-        self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido()
         self.modeloRegistro.quemPediuEnvido = getattr(controller, 'quemPediuEnvido', 0)
         self.modeloRegistro.quemGanhouEnvido = getattr(controller, 'quemGanhouEnvido', 0)
         self.modeloRegistro.quemPediuRealEnvido = getattr(controller, 'quemPediuRealEnvido', 0)
@@ -259,7 +260,7 @@ class Bot():
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemNegouTruco' in df.columns:
                 maioria = df['quemNegouTruco'].value_counts().idxmax()
-                return maioria != 2
+                return maioria == 1 or maioria == 0
 
     def pedir_envido(self, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
