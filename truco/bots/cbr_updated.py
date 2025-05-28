@@ -14,8 +14,8 @@ class CbrUpdated():
         self.indice = 0
         # Define o diretório base do projeto
         self.base_dir = Path(__file__).parent.parent.parent
-        self.csv_maos = self.base_dir / 'dbtrucoimitacao_maos.csv'
-        self.csv_maos_cbrkit = self.base_dir / 'dbtrucoimitacao_maos_cbrkit.csv'
+        self.dbtrucoimitacao_maos = self.base_dir / 'dbtrucoimitacao_maos.csv'
+        self.dbtrucoimitacao_maos_cbrkit = self.base_dir / 'dbtrucoimitacao_maos_cbrkit.csv'
         self.casebase = self.atualizarDataframe()
 
     def codificarNaipe(self, naipe):
@@ -32,9 +32,9 @@ class CbrUpdated():
             return 4
 
     def gerar_novo_CSV(self):
-        if not self.csv_maos.exists():
-            raise FileNotFoundError(f"Arquivo CSV de mãos não encontrado: {self.csv_maos}")
-        df = pd.read_csv(self.csv_maos, index_col='idMao').fillna(0)
+        if not self.dbtrucoimitacao_maos.exists():
+            raise FileNotFoundError(f"Arquivo CSV de mãos não encontrado: {self.dbtrucoimitacao_maos}")
+        df = pd.read_csv(self.dbtrucoimitacao_maos, index_col='idMao').fillna(0)
         colunas_string = [
             'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo', 
             'naipeCartaAltaHumano', 'naipeCartaMediaHumano', 'naipeCartaBaixaHumano',
@@ -50,12 +50,12 @@ class CbrUpdated():
         df[colunas_string] = df[colunas_string].astype('int')
         df = df[(df >= 0).all(axis=1)]
         
-        df.to_csv(self.csv_maos_cbrkit)
+        df.to_csv(self.dbtrucoimitacao_maos_cbrkit)
 
     def atualizarDataframe(self):
         self.gerar_novo_CSV()
-        if not self.csv_maos_cbrkit.exists():
-            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.csv_maos_cbrkit}")
+        if not self.dbtrucoimitacao_maos_cbrkit.exists():
+            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.dbtrucoimitacao_maos_cbrkit}")
         # Garante que todos os campos usados na query estejam presentes no DataFrame
         campos_necessarios = [
             'jogadorMao',
@@ -66,22 +66,22 @@ class CbrUpdated():
             'terceiraCartaRobo', 'terceiraCartaHumano',
             'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
             'quemTruco', 'quemGanhouTruco',
-            'quemRetruco', 'quemGanhouRetruco',
-            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'quemRetruco',
+            'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
             'quemPediuRealEnvido', 'quemGanhouRealEnvido',
             'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
-            'quemFlor', 'quemGanhouFlor',
-            'quemContraFlor', 'quemGanhouContraFlor',
-            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
+            'quemFlor',
+            'quemContraFlor',
+            'quemContraFlorResto', 'quemGanhouFlor',
         ]
-        df = pd.read_csv(self.csv_maos_cbrkit)
+        df = pd.read_csv(self.dbtrucoimitacao_maos_cbrkit)
         for campo in campos_necessarios:
             if campo not in df.columns:
                 df[campo] = 0
-        df.to_csv(self.csv_maos_cbrkit, index=False)
-        casebase = cbrkit.loaders.file(self.csv_maos_cbrkit)
+        df.to_csv(self.dbtrucoimitacao_maos_cbrkit, index=False)
+        casebase = cbrkit.loaders.file(self.dbtrucoimitacao_maos_cbrkit)
         return casebase
     
     def montar_query_do_registro(self, registro):
@@ -95,15 +95,15 @@ class CbrUpdated():
             'terceiraCartaRobo', 'terceiraCartaHumano',
             'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
             'quemTruco', 'quemGanhouTruco',
-            'quemRetruco', 'quemGanhouRetruco',
-            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'quemRetruco',
+            'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
             'quemPediuRealEnvido', 'quemGanhouRealEnvido',
             'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
-            'quemFlor', 'quemGanhouFlor',
-            'quemContraFlor', 'quemGanhouContraFlor',
-            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
+            'quemFlor',
+            'quemContraFlor',
+            'quemContraFlorResto', 'quemGanhouFlor',
         ]
         if hasattr(registro, 'to_dict'):
             if hasattr(registro, 'iloc'):
@@ -147,15 +147,15 @@ class CbrUpdated():
             'terceiraCartaRobo', 'terceiraCartaHumano',
             'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
             'quemTruco', 'quemGanhouTruco',
-            'quemRetruco', 'quemGanhouRetruco',
-            'quemValeQuatro', 'quemGanhouValeQuatro',
+            'quemRetruco',
+            'quemValeQuatro',
             'pontosEnvidoRobo',
             'quemPediuEnvido', 'quemGanhouEnvido',
             'quemPediuRealEnvido', 'quemGanhouRealEnvido',
             'quemPediuFaltaEnvido', 'quemGanhouFaltaEnvido',
-            'quemFlor', 'quemGanhouFlor',
-            'quemContraFlor', 'quemGanhouContraFlor',
-            'quemContraFlorResto', 'quemGanhouContraFlorEnvido',
+            'quemFlor',
+            'quemContraFlor',
+            'quemContraFlorResto', 'quemGanhouFlor',
         ]
         for col in casebase_columns:
             if col not in jogadas_similares_df.columns:
@@ -186,9 +186,7 @@ class CbrUpdated():
                 'quemTruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
                 'pontosEnvidoRobo': cbrkit.sim.numbers.linear(min=0, max=33),
                 'quemPediuEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
@@ -199,9 +197,7 @@ class CbrUpdated():
                 'quemFlor': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouFlor': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemContraFlorResto': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouContraFlorEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
             },
             aggregator=cbrkit.sim.aggregator("mean"),
         )

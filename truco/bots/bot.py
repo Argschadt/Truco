@@ -211,9 +211,7 @@ class Bot():
         self.modeloRegistro.quemTruco = getattr(controller, 'quemTruco', 0)
         self.modeloRegistro.quemGanhouTruco = getattr(controller, 'quemGanhouTruco', 0)
         self.modeloRegistro.quemRetruco = getattr(controller, 'quemRetruco', 0)
-        self.modeloRegistro.quemGanhouRetruco = getattr(controller, 'quemGanhouRetruco', 0)
         self.modeloRegistro.quemValeQuatro = getattr(controller, 'quemValeQuatro', 0)
-        self.modeloRegistro.quemGanhouValeQuatro = getattr(controller, 'quemGanhouValeQuatro', 0)
 
         # Envido
         self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido()
@@ -228,9 +226,7 @@ class Bot():
         self.modeloRegistro.quemFlor = getattr(controller, 'quemFlor', 0)
         self.modeloRegistro.quemGanhouFlor = getattr(controller, 'quemGanhouFlor', 0)
         self.modeloRegistro.quemContraFlor = getattr(controller, 'quemContraFlor', 0)
-        self.modeloRegistro.quemGanhouContraFlor = getattr(controller, 'quemGanhouContraFlor', 0)
         self.modeloRegistro.quemContraFlorResto = getattr(controller, 'quemContraFlorResto', 0)
-        self.modeloRegistro.quemGanhouContraFlorEnvido = getattr(controller, 'quemGanhouContraFlorEnvido', 0)
 
     def pedir_truco(self, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
@@ -262,9 +258,10 @@ class Bot():
             return False
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
-            if not df.empty and 'quemEnvidoEnvido' in df.columns:
-                maioria = df['quemEnvidoEnvido'].value_counts().idxmax()
-                return maioria == 1
+            if not df.empty and 'quemPediuEnvido' in df.columns:
+                maioria = df['quemPediuEnvido'].value_counts().idxmax()
+                return maioria == 2
+        print("Nao usou o CBR para pedir envido")
         return False
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
