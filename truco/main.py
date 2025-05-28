@@ -425,7 +425,6 @@ def main():
                     if isinstance(resultado, tuple) and len(resultado) == 7:
                         _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                     
-                    print("Entrou aqui?")
                     pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                     pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                     prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
@@ -450,7 +449,13 @@ def main():
                             carta2 = segundo_jogador.jogarCarta(carta_idx)
                         else:
                             break
-                    continue
+                    elif(acao.isdigit()):
+                        carta_idx = int(acao)
+                        if 0 <= carta_idx < len(segundo_jogador.mao):
+                            mostrar_mensagem(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")
+                            carta2 = segundo_jogador.jogarCarta(carta_idx)
+                        else:
+                            mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                 elif acao == 'r' and pode_pedir_real_envido:
                     # Real Envido
                     envido_ja_pedido = True
@@ -483,7 +488,13 @@ def main():
                             carta2 = segundo_jogador.jogarCarta(carta_idx)
                         else:
                             break
-                    continue
+                    elif(acao.isdigit()):
+                        carta_idx = int(acao)
+                        if 0 <= carta_idx < len(segundo_jogador.mao):
+                            mostrar_mensagem(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")
+                            carta2 = segundo_jogador.jogarCarta(carta_idx)
+                        else:
+                            mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                 elif acao == 'f' and pode_pedir_falta_envido:
                     # Falta Envido
                     envido_ja_pedido = True
@@ -516,7 +527,13 @@ def main():
                             carta2 = segundo_jogador.jogarCarta(carta_idx)
                         else:
                             break
-                    continue
+                    elif(acao.isdigit()):
+                        carta_idx = int(acao)
+                        if 0 <= carta_idx < len(segundo_jogador.mao):
+                            mostrar_mensagem(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")
+                            carta2 = segundo_jogador.jogarCarta(carta_idx)
+                        else:
+                            mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                 elif acao == 'l' and pode_pedir_flor:
                     # Flor
                     flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resolver_flor(
@@ -548,6 +565,13 @@ def main():
                             carta2 = segundo_jogador.jogarCarta(carta_idx)
                         else:
                             break
+                    elif(acao.isdigit()):
+                        carta_idx = int(acao)
+                        if 0 <= carta_idx < len(segundo_jogador.mao):
+                            mostrar_mensagem(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")
+                            carta2 = segundo_jogador.jogarCarta(carta_idx)
+                        else:
+                            mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(segundo_jogador.mao)-1}.")
                     continue
                 elif acao.isdigit():
                     print("Entrou aqui?")
