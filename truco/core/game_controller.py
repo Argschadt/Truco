@@ -65,6 +65,14 @@ class GameController:
         if h.count(2) == 2:
             calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
             return self.jogador2
+        # Caso: 2 rodadas jogadas, uma vitória e um empate
+        if len(h) == 2:
+            if h.count(1) == 1 and h.count(0) == 1:
+                calcular_pontuacao(self.jogador1, 'mao', self.pontos_truco)
+                return self.jogador1
+            if h.count(2) == 1 and h.count(0) == 1:
+                calcular_pontuacao(self.jogador2, 'mao', self.pontos_truco)
+                return self.jogador2
         # Caso: 3 rodadas jogadas
         if len(h) == 3:
             # 3 empates
