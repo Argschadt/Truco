@@ -120,12 +120,9 @@ class CbrUpdated():
         global_sim = self.global_similarity()
         retriever = cbrkit.retrieval.build(global_sim, limit=100)
         query = self.montar_query_do_registro(registro)
-        try:
-            result = cbrkit.retrieval.apply(self.casebase, query, retriever)
-        except IndexError as e:
-            print("ERRO: IndexError ao chamar o retrieval. O casebase está vazio ou a query não bate com os dados.")
-            print("Detalhes:", e)
-            return pd.DataFrame()
+        result = cbrkit.retrieval.apply(self.casebase, query, retriever)
+        
+        #print("\nResultado da busca:", result, "\n")
         
         if isinstance(result.casebase, dict):
             if all(isinstance(v, list) for v in result.casebase.values()):
@@ -137,6 +134,7 @@ class CbrUpdated():
         else:
             valid_indices = [i for i in result.ranking if i < len(result.casebase)]
             jogadas_similares_df = result.casebase.iloc[valid_indices]
+        print("\nJogadas similares encontradas:", jogadas_similares_df, "\n")
         # Lista reduzida de colunas essenciais
         casebase_columns = [
             'jogadorMao',
