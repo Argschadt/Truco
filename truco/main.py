@@ -425,6 +425,7 @@ def main():
                     if isinstance(resultado, tuple) and len(resultado) == 7:
                         _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                     
+                    print("Entrou aqui?")
                     pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                     pode_pedir_flor = flor_pode_ser_pedida and not flor_ja_pedida and segundo_jogador.checaFlor() and len(segundo_jogador.mao) == 3
                     prompt = montar_prompt_acao(pode_pedir_truco, controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, segundo_jogador)
@@ -549,6 +550,7 @@ def main():
                             break
                     continue
                 elif acao.isdigit():
+                    print("Entrou aqui?")
                     carta_idx = int(acao)
                     if 0 <= carta_idx < len(segundo_jogador.mao):
                         print(f"Você escolheu: {segundo_jogador.mao[carta_idx].numero} de {segundo_jogador.mao[carta_idx].naipe}")
@@ -559,7 +561,6 @@ def main():
                 else:
                     print("Opção inválida! Digite T, E, R, F, L ou o número da carta.")
                     continue
-                
             print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
             print(f'{segundo_jogador.nome} jogou: {carta2.numero} de {carta2.naipe}')
             

@@ -113,7 +113,7 @@ class CbrUpdated():
         else:
             registro_dict = dict(registro)
         query = {campo: registro_dict.get(campo, 0) for campo in campos}
-        print("Query montada:", query)
+        print("\nQuery montada:", query, "\n")
         return query
 
     def retornarSimilares(self, registro):

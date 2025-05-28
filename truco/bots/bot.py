@@ -29,8 +29,7 @@ class Bot():
         self.modeloRegistro = ModeloRegistro()
         # Caminho absoluto para a raiz do projeto
         raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
-    
-    def criarMao(self, baralho):
+    def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
         """ # Obter todos os naipes disponíveis no baralho
@@ -67,6 +66,7 @@ class Bot():
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
         self.inicializarRegistro()
+        self.atualizar_modelo_registro(controller)
     
     def jogarCarta(self, cbr, controller=None):
         self.atualizar_modelo_registro(controller)
@@ -114,8 +114,9 @@ class Bot():
         if self.mao:
             self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         else:
-            self.pontuacaoCartas, self.maoRank = [], []
-        self.indices = self.AjustaIndicesMao(len(self.indices))
+            self.pontuacaoCartas, self.maoRank = [], []        
+            self.indices = self.AjustaIndicesMao(len(self.indices))
+        self.atualizar_modelo_registro(controller)
         return carta_jogada
 
 
@@ -283,8 +284,7 @@ class Bot():
             if not df.empty and 'quemEnvidoEnvido' in df.columns:
                 maioria = df['quemEnvidoEnvido'].value_counts().idxmax()
                 return maioria == 1
-        naipes = [carta.retornarNaipe() for carta in self.mao]
-        return len(set(naipes)) < 3
+        return False
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
@@ -304,19 +304,20 @@ class Bot():
             if not df.empty and 'quemFlor' in df.columns:
                 maioria = df['quemFlor'].value_counts().idxmax()
                 return maioria == 1
-        return self.flor
-
-    def registrar_resultado_rodada(self, resultado):
+        return self.flor    
+    
+    def registrar_resultado_rodada(self, resultado, controller=None):
         """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
         self.rodadas += 1
         # Pode adicionar lógica de aprendizado ou ajuste de estratégia
-
-    def registrar_resultado_mao(self, resultado):
+        self.atualizar_modelo_registro(controller)    
+        
+    def registrar_resultado_mao(self, resultado, controller=None):
         """Atualiza o estado do bot após cada mão (ganhou, perdeu, empatou)."""
         # Pode adicionar lógica de aprendizado ou ajuste de estratégia
-        pass
-
-    def resetar_estado_mao(self):
+        self.atualizar_modelo_registro(controller)    
+        
+    def resetar_estado_mao(self, controller=None):
         """Limpa todos os estados temporários ao fim de uma mão."""
         self.mao = []
         self.maoRank = []
@@ -327,6 +328,27 @@ class Bot():
         self.pediuTruco = False
         self.rodadas = 0
         self.invido = 0
+        self.atualizar_modelo_registro(controller)
+
+    def registrar_carta_jogada(self, carta_valor, rodada_num, controller=None):
+        """Registra uma carta jogada pelo bot no modelo de registro."""
+        if rodada_num == 1:
+            self.primeiraCartaRobo = carta_valor
+        elif rodada_num == 2:
+            self.segundaCartaRobo = carta_valor
+        elif rodada_num == 3:
+            self.terceiraCartaRobo = carta_valor
+        self.atualizar_modelo_registro(controller)
+
+    def registrar_carta_humano(self, carta_valor, rodada_num, controller=None):
+        """Registra uma carta jogada pelo humano no modelo de registro."""
+        if rodada_num == 1:
+            self.primeiraCartaHumano = carta_valor
+        elif rodada_num == 2:
+            self.segundaCartaHumano = carta_valor
+        elif rodada_num == 3:
+            self.terceiraCartaHumano = carta_valor
+        self.atualizar_modelo_registro(controller)
 
     def calcular_pontos_envido(self):
         from truco.utils.pontos import ENVIDO
