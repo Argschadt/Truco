@@ -67,6 +67,8 @@ class Bot():
         self.forcaMao = sum(self.pontuacaoCartas)
         self.inicializarRegistro(controller)
         self.atualizar_modelo_registro(controller)
+        self.cartas_jogadas_robo = [0, 0, 0]
+        self.cartas_jogadas_humano = [0, 0, 0]
     
     def jogarCarta(self, cbr, controller=None):
         self.atualizar_modelo_registro(controller)
@@ -116,7 +118,6 @@ class Bot():
         else:
             self.pontuacaoCartas, self.maoRank = [], []        
             self.indices = self.AjustaIndicesMao(len(self.indices))
-        self.atualizar_modelo_registro(controller)
         return carta_jogada
 
 
@@ -159,7 +160,6 @@ class Bot():
         return False
     
     def inicializarRegistro(self, controller=None):
-        print("Inicializando registro do bot")
         self.modeloRegistro.jogadorMao = 1 if controller and hasattr(controller, 'jogador_mao') else 2
         # Definir índices de Alta, Media e Baixa se existirem
         idx_alta = self.maoRank.index("Alta") if "Alta" in self.maoRank else None
@@ -198,7 +198,6 @@ class Bot():
         return None
 
     def atualizar_modelo_registro(self, controller=None):
-        print("Atualizando modelo de registro do bot")
         if controller is None:
             return
 
@@ -206,13 +205,19 @@ class Bot():
         if hasattr(controller, 'jogador_mao'):
             self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2                    
 
-        # Cartas jogadas (precisa ser implementado conforme o controle do jogo)
-        self.modeloRegistro.primeiraCartaRobo = getattr(self, 'primeiraCartaRobo', -1)
-        self.modeloRegistro.primeiraCartaHumano = getattr(self, 'primeiraCartaHumano', -1)
-        self.modeloRegistro.segundaCartaRobo = getattr(self, 'segundaCartaRobo', -1)
-        self.modeloRegistro.segundaCartaHumano = getattr(self, 'segundaCartaHumano', -1)
-        self.modeloRegistro.terceiraCartaRobo = getattr(self, 'terceiraCartaRobo', -1)
-        self.modeloRegistro.terceiraCartaHumano = getattr(self, 'terceiraCartaHumano', -1)
+        # Controle robusto das cartas jogadas
+        # Inicializa listas se não existirem
+        if not hasattr(self, 'cartas_jogadas_robo'):
+            self.cartas_jogadas_robo = [0, 0, 0]
+        if not hasattr(self, 'cartas_jogadas_humano'):
+            self.cartas_jogadas_humano = [0, 0, 0]
+        # Atualiza os campos do modelo de registro
+        self.modeloRegistro.primeiraCartaRobo = self.cartas_jogadas_robo[0]
+        self.modeloRegistro.segundaCartaRobo = self.cartas_jogadas_robo[1]
+        self.modeloRegistro.terceiraCartaRobo = self.cartas_jogadas_robo[2]
+        self.modeloRegistro.primeiraCartaHumano = self.cartas_jogadas_humano[0]
+        self.modeloRegistro.segundaCartaHumano = self.cartas_jogadas_humano[1]
+        self.modeloRegistro.terceiraCartaHumano = self.cartas_jogadas_humano[2]
 
         # Rodadas
         if hasattr(controller, 'historico_rodadas'):
@@ -323,26 +328,28 @@ class Bot():
         self.pediuTruco = False
         self.rodadas = 0
         self.invido = 0
+        self.cartas_jogadas_robo = [0, 0, 0]
+        self.cartas_jogadas_humano = [0, 0, 0]
         self.atualizar_modelo_registro(controller)
 
     def registrar_carta_jogada(self, carta_valor, rodada_num, controller=None):
         """Registra uma carta jogada pelo bot no modelo de registro."""
         if rodada_num == 1:
-            self.primeiraCartaRobo = carta_valor
+            self.cartas_jogadas_robo[0] = carta_valor
         elif rodada_num == 2:
-            self.segundaCartaRobo = carta_valor
+            self.cartas_jogadas_robo[1] = carta_valor
         elif rodada_num == 3:
-            self.terceiraCartaRobo = carta_valor
+            self.cartas_jogadas_robo[2] = carta_valor
         self.atualizar_modelo_registro(controller)
 
     def registrar_carta_humano(self, carta_valor, rodada_num, controller=None):
         """Registra uma carta jogada pelo humano no modelo de registro."""
         if rodada_num == 1:
-            self.primeiraCartaHumano = carta_valor
+            self.cartas_jogadas_humano[0] = carta_valor
         elif rodada_num == 2:
-            self.segundaCartaHumano = carta_valor
+            self.cartas_jogadas_humano[1] = carta_valor
         elif rodada_num == 3:
-            self.terceiraCartaHumano = carta_valor
+            self.cartas_jogadas_humano[2] = carta_valor
         self.atualizar_modelo_registro(controller)
 
     def calcular_pontos_envido(self):

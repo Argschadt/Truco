@@ -362,6 +362,10 @@ def main():
             # Lógica com base em quem é o primeiro jogador
             if primeiro_jogador == controller.jogador1:  # Humano joga primeiro
                 carta1 = primeiro_jogador.jogarCarta(carta_idx)
+                # REGISTRO AUTOMÁTICO DA CARTA JOGADA PELO HUMANO
+                # O bot é sempre controller.jogador2
+                rodada_num = rodada  # 1, 2 ou 3
+                controller.jogador2.registrar_carta_humano(carta1.retornarPontosCarta(carta1), rodada_num, controller)
                 # Bot
                 pode_pedir_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
                 pode_pedir_real_envido = rodada == 1 and envido_pode_ser_pedido and not envido_ja_pedido
@@ -379,8 +383,14 @@ def main():
                     if isinstance(resultado, tuple) and len(resultado) == 7:
                         _, _, _, _, flor_ja_pedida, flor_pode_ser_pedida, envido_pode_ser_pedido = resultado
                 carta2 = segundo_jogador.jogarCarta(controller.cbr, controller)
+                # Registrar a carta jogada na rodada correta
+                rodada_num = rodada  # 1 para a primeira, 2 para a segunda, 3 para a terceira
+                controller.jogador2.registrar_carta_jogada(carta2.retornarPontosCarta(carta2), rodada_num, controller)
             else:  # Bot joga primeiro
                 carta1 = primeiro_jogador.jogarCarta(controller.cbr, controller)
+                # Registrar a carta jogada na rodada correta
+                rodada_num = rodada  # 1 para a primeira, 2 para a segunda, 3 para a terceira
+                controller.jogador2.registrar_carta_jogada(carta1.retornarPontosCarta(carta1), rodada_num, controller)
                 print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
                 mostrar_mao(segundo_jogador)
                 # CORREÇÃO: Só permite pedir truco se quem_pode_pedir_truco for o segundo_jogador
@@ -583,6 +593,10 @@ def main():
                 else:
                     print("Opção inválida! Digite T, E, R, F, L ou o número da carta.")
                     continue
+                # REGISTRO AUTOMÁTICO DA CARTA JOGADA PELO HUMANO
+                # O bot é sempre controller.jogador2
+                rodada_num = rodada  # 1, 2 ou 3
+                controller.jogador2.registrar_carta_humano(carta2.retornarPontosCarta(carta2), rodada_num, controller)
             print(f'{primeiro_jogador.nome} jogou: {carta1.numero} de {carta1.naipe}')
             print(f'{segundo_jogador.nome} jogou: {carta2.numero} de {carta2.naipe}')
             
