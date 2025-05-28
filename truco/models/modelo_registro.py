@@ -19,6 +19,7 @@ class ModeloRegistro:
         self.ganhadorSegundaRodada = 2
         self.ganhadorTerceiraRodada = 2
         self.quemTruco = 0
+        self.quemNegouTruco = 0
         self.quemGanhouTruco = 0
         self.quemRetruco = 0
         self.quemGanhouRetruco = 0

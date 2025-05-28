@@ -32,7 +32,7 @@ class Bot():
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
-        # Obter todos os naipes disponíveis no baralho
+        """ # Obter todos os naipes disponíveis no baralho
         available_suits = list(set(carta.naipe for carta in baralho.cartas))
         if available_suits:
             chosen_suit = random.choice(available_suits)
@@ -57,11 +57,11 @@ class Bot():
                 for i in range(3):
                     self.mao.append(baralho.retirarCarta())
                 self.flor = self.checaFlor()
-        else: 
+        else: """
             # Fallback: criação padrão de mão
-            for i in range(3):
-                self.mao.append(baralho.retirarCarta())
-            self.flor = self.checaFlor()
+        for i in range(3):
+            self.mao.append(baralho.retirarCarta())
+        self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
@@ -72,7 +72,7 @@ class Bot():
     
     def jogarCarta(self, cbr, controller=None):
         self.atualizar_modelo_registro(controller)
-        if self.indices is None:
+        if self.indices is None or len(self.indices) != len(self.mao):
             self.indices = list(range(len(self.mao)))
         if not self.mao:
             return None
@@ -87,11 +87,19 @@ class Bot():
 
         # Se não há CBR ou coluna correspondente, joga a menor carta
         if df.empty or ordem_carta_jogada not in df.columns:
-            indice = self.pontuacaoCartas.index(min(self.pontuacaoCartas))
-            self.indices.remove(indice)
-            self.pontuacaoCartas.pop(indice)
-            self.indices = self.AjustaIndicesMao(len(self.indices))
-            return self.mao.pop(indice)
+            print("Jogou MENOR CARTA!!!!!!!!!!!!")
+            # Encontra o índice da menor carta na pontuacaoCartas
+            menor_pontuacao = min(self.pontuacaoCartas)
+            idx_mao = self.pontuacaoCartas.index(menor_pontuacao)
+            # O índice real na mão é self.indices[idx_mao]
+            indice_real = self.indices[idx_mao]
+            # Remove dos controles
+            self.indices.pop(idx_mao)
+            self.pontuacaoCartas.pop(idx_mao)
+            carta_jogada = self.mao.pop(idx_mao)
+            # Ajusta os índices restantes
+            self.indices = list(range(len(self.mao)))
+            return carta_jogada
 
         # Verifica qual carta (alta, media, baixa) foi jogada pela maioria
         cartas_mao = {
@@ -111,9 +119,10 @@ class Bot():
         # Se a carta escolhida não está mais na mão (já foi jogada), pega a menor
         if carta_escolhida not in self.pontuacaoCartas:
             carta_escolhida = min(self.pontuacaoCartas)
-        indice = self.pontuacaoCartas.index(carta_escolhida)
-        self.indices.remove(indice)
-        carta_jogada = self.mao.pop(indice)
+        idx_mao = self.pontuacaoCartas.index(carta_escolhida)
+        self.indices.pop(idx_mao)
+        carta_jogada = self.mao.pop(idx_mao)
+        self.pontuacaoCartas.pop(idx_mao)
         # Atualiza pontuação e ranking de acordo com o número de cartas restantes
         if len(self.mao) >= 3:
             self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
@@ -123,7 +132,9 @@ class Bot():
             self.maoRank = ["Alta" if i == 0 else "Baixa" for i in range(len(self.mao))]
         else:
             self.pontuacaoCartas, self.maoRank = [], []
-            self.indices = self.AjustaIndicesMao(len(self.indices))
+            self.indices = []
+        # Ajusta os índices restantes
+        self.indices = list(range(len(self.mao)))
         return carta_jogada
 
 
@@ -234,26 +245,21 @@ class Bot():
 
     def pedir_truco(self, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
-        """Decide se vai pedir truco (ou aumentar aposta) usando CBR se disponível."""
+        """Decide se vai pedir truco usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemTruco' in df.columns:
-                # 1 = bot pediu truco, 0 = não pediu
                 maioria = df['quemTruco'].value_counts().idxmax()
-                return maioria == 1
-        return self.forcaMao > 40
+                return maioria == 2
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
-        """Decide se aceita o truco pedido pelo adversário usando CBR se disponível."""
+        """Decide se vai aceitar truco usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemNegouTruco' in df.columns:
-                # 0 = não negou (aceitou), 1 = negou (recusou)
                 maioria = df['quemNegouTruco'].value_counts().idxmax()
-                return maioria == 0
-        # fallback heurístico
-        return self.forcaMao > 25
+                return maioria != 2
 
     def pedir_envido(self, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
@@ -263,28 +269,26 @@ class Bot():
             if not df.empty and 'quemPediuEnvido' in df.columns:
                 maioria = df['quemPediuEnvido'].value_counts().idxmax()
                 return maioria == 2
-        print("Nao usou o CBR para pedir envido")
-        return False
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
-        """Decide se aceita o envido pedido pelo adversário usando CBR se disponível."""
+        """Decide se vai aceitar envido usando CBR se disponível."""
         if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemNegouEnvido' in df.columns:
                 maioria = df['quemNegouEnvido'].value_counts().idxmax()
-                return maioria == 0
-        return False
+                return maioria == 2
 
     def pedir_flor(self, cbr=None, controller=None):
         self.atualizar_modelo_registro(controller)
         """Decide se vai pedir flor usando CBR se disponível."""
-        if cbr is not None:
+        """ if cbr is not None:
             df = cbr.retornarSimilares(self.modeloRegistro)
             if not df.empty and 'quemFlor' in df.columns:
                 maioria = df['quemFlor'].value_counts().idxmax()
-                return maioria == 2
-        print("Nao usou o CBR para pedir flor")
+                return maioria == 2 """
+                
+        #NAO ACHEI REGISTRO DE PEDIDO DE FLOR NO CSV
         return self.flor    
     
     def registrar_resultado_rodada(self, resultado, controller=None):

@@ -17,7 +17,7 @@ CAMPOS_NECESSARIOS = [
                         'segundaCartaRobo', 'segundaCartaHumano',
                         'terceiraCartaRobo', 'terceiraCartaHumano',
                         'ganhadorPrimeiraRodada', 'ganhadorSegundaRodada', 'ganhadorTerceiraRodada',
-                        'quemTruco', 'quemGanhouTruco',
+                        'quemTruco', 'quemGanhouTruco', 'quemNegouTruco',
                         'quemRetruco',
                         'quemValeQuatro',
                         'pontosEnvidoRobo',
@@ -89,7 +89,7 @@ class CbrUpdated():
         registro_dict = registro.to_dict()
         # Só adiciona campo se valor for diferente de 0
         query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
-        #print("\nQuery montada:", query, "\n")
+        print("\nQuery montada:", query, "\n")
         return query
 
     def atualizarCaseBase(self, jogadorMao):
@@ -138,6 +138,7 @@ class CbrUpdated():
                 'ganhadorSegundaRodada': cbrkit.sim.numbers.linear(min=0, max=2),
                 'ganhadorTerceiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemTruco': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemNegouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemGanhouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
                 'quemValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
