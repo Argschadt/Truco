@@ -52,8 +52,24 @@ class GameController:
         return ganhador, None
 
     def mao_decidida(self):
-        """Retorna True se algum jogador já venceu 2 rodadas nesta mão."""
-        return self.historico_rodadas.count(1) >= 2 or self.historico_rodadas.count(2) >= 2
+        """Retorna True se a mão já foi decidida por qualquer critério válido (2 vitórias, 2x0, 3 rodadas, empate, etc)."""
+        h = self.historico_rodadas
+        # Alguém venceu 2 rodadas
+        if h.count(1) == 2 or h.count(2) == 2:
+            return True
+        # Duas rodadas jogadas e ambas vencidas pelo mesmo jogador (2x0)
+        if len(h) == 2 and h[0] == h[1] and h[0] in [1, 2]:
+            return True
+        # Três rodadas jogadas (independente do resultado)
+        if len(h) == 3:
+            return True
+        # Três empates
+        if len(h) == 3 and h.count(0) == 3:
+            return True
+        # Empate total (ex: [1,2,1] e [2,1,2] não são empates, mas [1,2,0] pode ser)
+        if len(h) == 3 and h.count(1) == h.count(2):
+            return True
+        return False
 
     def processar_fim_mao(self):
         h = self.historico_rodadas
