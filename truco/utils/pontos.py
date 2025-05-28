@@ -1,8 +1,8 @@
 MANILHA = {
-    "1 de ESPADAS": 52,
-    "1 de BASTOS": 50,
-    "7 de ESPADAS": 42,
-    "7 de OUROS": 40
+    "1 De Espadas": 52,
+    "1 De Bastos": 50,
+    "7 De Espadas": 42,
+    "7 De Ouros": 40
 }
 
 CARTAS_VALORES = {

@@ -618,21 +618,6 @@ def main():
                 mao_encerrada = True
                 break
 
-            # Encerra a mão imediatamente se o mesmo jogador venceu as duas primeiras rodadas (2x0)
-            if len(controller.historico_rodadas) == 2 and (controller.historico_rodadas[0] == controller.historico_rodadas[1]) and controller.historico_rodadas[0] in [1,2]:
-                vencedor_mao = controller.processar_fim_mao()
-                if vencedor_mao:
-                    print(f'\n{vencedor_mao.nome} venceu a mão e ganhou {controller.pontos_truco} ponto(s)!')
-                    controller.mostrar_estado()
-                    if vencedor_mao == controller.jogador2:
-                        controller.definir_proximo_primeiro(controller.jogador2)
-                    else:
-                        controller.definir_proximo_primeiro(controller.jogador1)
-                else:
-                    print('\nA mão terminou empatada!')
-                mao_encerrada = True
-                break
-
             # Alternância correta: quem venceu a rodada começa a próxima
             if ganhador_rodada == carta1:
                 print(f'{primeiro_jogador.nome} venceu a rodada!')
