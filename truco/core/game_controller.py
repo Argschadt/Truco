@@ -60,6 +60,9 @@ class GameController:
         # Duas rodadas jogadas e ambas vencidas pelo mesmo jogador (2x0)
         if len(h) == 2 and h[0] == h[1] and h[0] in [1, 2]:
             return True
+        # Duas rodadas jogadas, uma vitória e um empate (ex: [1,0] ou [2,0])
+        if len(h) == 2 and (h.count(1) == 1 and h.count(0) == 1 or h.count(2) == 1 and h.count(0) == 1):
+            return True
         # Três rodadas jogadas (independente do resultado)
         if len(h) == 3:
             return True
