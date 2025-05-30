@@ -1,6 +1,10 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 truco/__pycache__/
+truco/bots/__pycache__/
+truco/core/__pycache__/
+truco/models/__pycache__/
+truco/utils/__pycache__/
 *.py[cod]
 *$py.class
 
