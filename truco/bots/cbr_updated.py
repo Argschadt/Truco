@@ -57,7 +57,7 @@ class CbrUpdated():
         registro_dict = registro.to_dict()
         # Só adiciona campo se valor for diferente de 0
         query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
-        print("\nQuery montada:", query, "\n")
+        #print("\nQuery montada:", query, "\n")
         return query
     
     def gerar_novo_CSV(self):
