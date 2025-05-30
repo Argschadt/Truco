@@ -21,7 +21,7 @@ CAMPOS_NECESSARIOS = [
                         'quemRetruco',
                         'quemValeQuatro',
                         'pontosEnvidoRobo',
-                        'quemPediuEnvido', 'quemGanhouEnvido', 'quemNegouEnvido'
+                        'quemPediuEnvido', 'quemGanhouEnvido', 'quemNegouEnvido',
                         'quemPediuRealEnvido',
                         'quemPediuFaltaEnvido',
                         'quemFlor',
@@ -36,7 +36,9 @@ class CbrUpdated():
         self.base_dir = Path(__file__).parent.parent.parent
         self.dbtrucoimitacao_maos = self.base_dir / 'dbtrucoimitacao_maos.csv'
         self.dbtrucoimitacao_maos_cbrkit = self.base_dir / 'dbtrucoimitacao_maos_cbrkit.csv'
-        self.casebase = self.atualizarDataframe()
+        self.dataframe = self.gerar_novo_CSV()
+        self.casebase_mao1 = self.gerarCaseBase_mao1()
+        self.casebase_mao2 = self.gerarCaseBase_mao2()
 
     def codificarNaipe(self, naipe):
         if naipe == 'ESPADAS':
@@ -51,6 +53,13 @@ class CbrUpdated():
         if naipe == 'COPAS':
             return 4
 
+    def montar_query_do_registro(self, registro):
+        registro_dict = registro.to_dict()
+        # Só adiciona campo se valor for diferente de 0
+        query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
+        print("\nQuery montada:", query, "\n")
+        return query
+    
     def gerar_novo_CSV(self):
         if not self.dbtrucoimitacao_maos.exists():
             raise FileNotFoundError(f"Arquivo CSV de mãos não encontrado: {self.dbtrucoimitacao_maos}")
@@ -74,43 +83,42 @@ class CbrUpdated():
             if column not in CAMPOS_NECESSARIOS:
                 df = df.drop(column, axis=1)
         
-        df.to_csv(self.dbtrucoimitacao_maos_cbrkit)
+        return df
 
-    def atualizarDataframe(self):
-        self.gerar_novo_CSV()
-        if not self.dbtrucoimitacao_maos_cbrkit.exists():
-            raise FileNotFoundError(f"Arquivo CSV para CBRKit não encontrado: {self.dbtrucoimitacao_maos_cbrkit}")
-        df = pd.read_csv(self.dbtrucoimitacao_maos_cbrkit)
-        df.to_csv(self.dbtrucoimitacao_maos_cbrkit, index=False)
-        casebase = cbrkit.loaders.file(self.dbtrucoimitacao_maos_cbrkit)
-        return casebase
-    
-    def montar_query_do_registro(self, registro):
-        registro_dict = registro.to_dict()
-        # Só adiciona campo se valor for diferente de 0
-        query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
-        print("\nQuery montada:", query, "\n")
-        return query
-
-    def atualizarCaseBase(self, jogadorMao):
+    def gerarCaseBase_mao1(self, jogadorMao=None):
         """Atualiza o casebase para conter apenas casos com jogadorMao igual ao informado."""
         # Carrega o DataFrame completo
-        df = pd.read_csv(self.dbtrucoimitacao_maos_cbrkit)
+        df = self.dataframe
         # Filtra pelo jogadorMao
-        df_filtrado = df[df['jogadorMao'] == jogadorMao]
+        df = df[df['jogadorMao'] == 1]
         # Salva em um arquivo temporário
-        temp_path = self.base_dir / f'dbtrucoimitacao_maos_cbrkit_jogadorMao_{jogadorMao}.csv'
-        df_filtrado.to_csv(temp_path, index=False)
+        temp_path = self.base_dir / f'dbtrucoimitacao_maos_cbrkit_jogadorMao_1.csv'
+        df.to_csv(temp_path, index=False)
         # Atualiza o casebase para usar apenas o filtrado
-        self.casebase = cbrkit.loaders.file(temp_path)
+        return cbrkit.loaders.file(temp_path)
+        
+    def gerarCaseBase_mao2(self, jogadorMao=None):
+        """Atualiza o casebase para conter apenas casos com jogadorMao igual ao informado."""
+        # Carrega o DataFrame completo
+        df = self.dataframe
+        # Filtra pelo jogadorMao
+        df = df[df['jogadorMao'] == 2]
+        # Salva em um arquivo temporário
+        temp_path = self.base_dir / f'dbtrucoimitacao_maos_cbrkit_jogadorMao_2.csv'
+        df.to_csv(temp_path, index=False)
+        # Atualiza o casebase para usar apenas o filtrado
+        return cbrkit.loaders.file(temp_path)
 
     def retornarSimilares(self, registro):
-        # Atualiza o casebase para conter apenas casos do jogadorMao do registro
-        self.atualizarCaseBase(registro.jogadorMao)
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, limit=100)
+        retriever = cbrkit.retrieval.build(global_sim, limit=20)
         query = self.montar_query_do_registro(registro)
-        result = cbrkit.retrieval.apply(self.casebase, query, retriever)        
+        if registro.jogadorMao == 1:
+            self.gerarCaseBase_mao1()
+            result = cbrkit.retrieval.apply(self.casebase_mao1, query, retriever)
+        elif registro.jogadorMao == 2:
+            self.gerarCaseBase_mao2()
+            result = cbrkit.retrieval.apply(self.casebase_mao2, query, retriever)
         jogadas_similares_df = pd.DataFrame([result.casebase])
         df_trad = jogadas_similares_df.transpose()
         casos = [row[0] for _, row in df_trad.iterrows()]
@@ -121,37 +129,37 @@ class CbrUpdated():
         # Função de similaridade global baseada nos atributos essenciais e novos campos
         sim_fn = cbrkit.sim.attribute_value(
             attributes={
-                'jogadorMao': cbrkit.sim.numbers.linear(min=1, max=2),
+                'jogadorMao': cbrkit.sim.generic.equality(),
                 'cartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
                 'cartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
                 'cartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
-                'naipeCartaAltaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
-                'naipeCartaMediaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
-                'naipeCartaBaixaRobo': cbrkit.sim.numbers.linear(min=1, max=4),
+                'naipeCartaAltaRobo': cbrkit.sim.generic.equality(),
+                'naipeCartaMediaRobo': cbrkit.sim.generic.equality(),
+                'naipeCartaBaixaRobo': cbrkit.sim.generic.equality(),
                 'primeiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
                 'primeiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
                 'segundaCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
                 'segundaCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
                 'terceiraCartaRobo': cbrkit.sim.numbers.linear(min=1, max=52),
                 'terceiraCartaHumano': cbrkit.sim.numbers.linear(min=1, max=52),
-                'ganhadorPrimeiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
-                'ganhadorSegundaRodada': cbrkit.sim.numbers.linear(min=0, max=2),
-                'ganhadorTerceiraRodada': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemTruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemNegouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouTruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemRetruco': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemValeQuatro': cbrkit.sim.numbers.linear(min=0, max=2),
+                'ganhadorPrimeiraRodada': cbrkit.sim.generic.equality(),
+                'ganhadorSegundaRodada': cbrkit.sim.generic.equality(),
+                'ganhadorTerceiraRodada': cbrkit.sim.generic.equality(),
+                'quemTruco': cbrkit.sim.generic.equality(),
+                'quemNegouTruco': cbrkit.sim.generic.equality(),
+                'quemGanhouTruco': cbrkit.sim.generic.equality(),
+                'quemRetruco': cbrkit.sim.generic.equality(),
+                'quemValeQuatro': cbrkit.sim.generic.equality(),
                 'pontosEnvidoRobo': cbrkit.sim.numbers.linear(min=0, max=33),
-                'quemPediuEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemNegouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemPediuRealEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemPediuFaltaEnvido': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemFlor': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemGanhouFlor': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemContraFlor': cbrkit.sim.numbers.linear(min=0, max=2),
-                'quemContraFlorResto': cbrkit.sim.numbers.linear(min=0, max=2),
+                'quemPediuEnvido': cbrkit.sim.generic.equality(),
+                'quemNegouEnvido': cbrkit.sim.generic.equality(),
+                'quemGanhouEnvido': cbrkit.sim.generic.equality(),
+                'quemPediuRealEnvido': cbrkit.sim.generic.equality(),
+                'quemPediuFaltaEnvido': cbrkit.sim.generic.equality(),
+                'quemFlor': cbrkit.sim.generic.equality(),
+                'quemGanhouFlor': cbrkit.sim.generic.equality(),
+                'quemContraFlor': cbrkit.sim.generic.equality(),
+                'quemContraFlorResto': cbrkit.sim.generic.equality(),
             },
             aggregator=cbrkit.sim.aggregator("mean"),
         )
