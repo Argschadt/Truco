@@ -48,6 +48,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
     carta_idx = None
     mao_encerrada = False
     while True:
+        # Verifica se o jogador pode pedir truco nesta rodada
         pode_pedir_truco = False
         if estado['pode_truco']:
             if estado['truco_fase'] == 0 and controller.pontos_truco == 1:
@@ -56,6 +57,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
                 pode_pedir_truco = True
             elif (estado['truco_fase'] == 2 and controller.pontos_truco == 3 and estado['vez_truco'] == primeiro_jogador):
                 pode_pedir_truco = True
+        # Verifica se pode pedir envido ou flor
         pode_pedir_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
         pode_pedir_flor = estado['pode_flor'] and not estado['flor_pedida'] and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
         pode_pedir_real_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
@@ -66,7 +68,9 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
             pode_pedir_truco and (estado['truco_fase'] == 0 or estado['vez_truco'] is None or estado['vez_truco'] == primeiro_jogador),
             controller.pontos_truco, pode_pedir_envido, pode_pedir_flor, primeiro_jogador, pode_pedir_real_envido, pode_pedir_falta_envido)
         acao = prompt_acao(prompt)
+        # Processa a ação escolhida pelo jogador
         if acao == 't' and pode_pedir_truco and (estado['truco_fase'] == 0 or estado['vez_truco'] is None or estado['vez_truco'] == primeiro_jogador):
+            # Jogador pede truco
             resultado, estado['truco_fase'], estado['pode_truco'], estado['pode_envido'], estado['vez_truco'], mao_encerrada = processar_acao_truco(
                 controller, primeiro_jogador, segundo_jogador, estado['truco_fase'], estado['pode_truco'], estado['pode_envido'], estado['vez_truco'], primeiro_da_partida)
             if resultado:
@@ -74,6 +78,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
             else:
                 break
         elif acao == 'e' and pode_pedir_envido:
+            # Jogador pede envido
             estado['envido_pedido'] = True
             estado['pode_envido'] = False
             resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida)
@@ -81,6 +86,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
                 _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
             continue
         elif acao == 'r' and pode_pedir_real_envido:
+            # Jogador pede real envido
             estado['envido_pedido'] = True
             estado['pode_envido'] = False
             resultado = processar_acao_envido(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida)
@@ -88,6 +94,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
                 _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
             continue
         elif acao == 'f' and pode_pedir_falta_envido:
+            # Jogador pede falta envido
             estado['envido_pedido'] = True
             estado['pode_envido'] = False
             pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
@@ -96,6 +103,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
                 _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
             continue
         elif acao == 'l' and pode_pedir_flor:
+            # Jogador pede flor
             estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resolver_flor(
                 primeiro_jogador, segundo_jogador, controller, calcular_pontuacao,
                 estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'],
@@ -103,6 +111,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
             )
             continue
         elif acao.isdigit():
+            # Jogador escolhe uma carta para jogar
             carta_idx = int(acao)
             if 0 <= carta_idx < len(primeiro_jogador.mao):
                 mostrar_mensagem(f"Você escolheu: {primeiro_jogador.mao[carta_idx].numero} de {primeiro_jogador.mao[carta_idx].naipe}")
@@ -111,6 +120,7 @@ def turno_jogador_humano(primeiro_jogador, segundo_jogador, controller, estado, 
                 mostrar_mensagem(f"Índice inválido! Escolha entre 0 e {len(primeiro_jogador.mao)-1}.")
         else:
             mostrar_mensagem("Opção inválida! Digite T, E, R, F ou o número da carta.")
+        # Define quem pode pedir truco na próxima vez, se necessário
         if estado['truco_fase'] == 0 and rodada == 1 and estado['vez_truco'] is None:
             estado['vez_truco'] = segundo_jogador
     return carta_idx, estado, mao_encerrada
@@ -122,6 +132,7 @@ def turno_jogador_bot(primeiro_jogador, segundo_jogador, controller, estado, pri
     """
     carta_idx = None
     mao_encerrada = False
+    # Checa possibilidades de pedir envido, real envido, falta envido ou flor
     pode_pedir_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
     pode_pedir_real_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
     pode_pedir_falta_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
@@ -197,6 +208,7 @@ def main():
         }
 
     while not controller.fim_de_jogo():
+        # Exibe o estado atual do jogo e reinicia a mão
         mostrar_estado(controller)
         controller.reiniciar_mao()
         controller.historico_rodadas = []
@@ -208,7 +220,7 @@ def main():
 
         estado = novo_estado_mao()
 
-        # Controle de quem começa a rodada
+        # Define quem começa a rodada (primeiro e segundo jogador)
         if hasattr(controller, 'proximo_primeiro') and controller.proximo_primeiro:
             primeiro, segundo = controller.proximo_primeiro, controller.jogador1 if controller.proximo_primeiro == controller.jogador2 else controller.jogador2
             controller.proximo_primeiro = None
@@ -216,15 +228,18 @@ def main():
             primeiro, segundo = controller.jogador1, controller.jogador2
 
         mao_encerrada = False
+        # Loop das rodadas da mão (até 3 rodadas)
         for rodada in range(1, 4):
             if controller.mao_decidida():
                 break
             mostrar_mensagem(f'\nRodada {rodada}')
 
+            # Permite pedir truco novamente se a aposta estiver entre 2 e 3
             if 1 < controller.pontos_truco < 4:
                 estado['pode_truco'] = True
 
             carta_idx = None
+            # Turno do jogador da vez (humano ou bot)
             if primeiro == controller.jogador1:
                 carta_idx, estado, mao_encerrada = turno_jogador_humano(
                     primeiro, segundo, controller, estado, primeiro_da_partida, rodada)
@@ -235,6 +250,7 @@ def main():
                     mostrar_mensagem(f'{primeiro.nome} jogou: {primeiro.mao[carta_idx].numero} de {primeiro.mao[carta_idx].naipe}')
             if mao_encerrada:
                 break
+            # Jogada das cartas pelos jogadores
             if primeiro == controller.jogador1:
                 carta1 = primeiro.jogarCarta(carta_idx)
                 rodada_num = rodada
@@ -257,8 +273,10 @@ def main():
             mostrar_mensagem(f'{primeiro.nome} jogou: {carta1.numero} de {carta1.naipe}')
             mostrar_mensagem(f'{segundo.nome} jogou: {carta2.numero} de {carta2.naipe}')
 
+            # Processa o resultado da rodada
             ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, primeiro, segundo)
 
+            # Verifica se a mão foi decidida após a rodada
             if controller.mao_decidida():
                 vencedor_mao = controller.processar_fim_mao()
                 if vencedor_mao:
@@ -274,6 +292,7 @@ def main():
                 mao_encerrada = True
                 break
 
+            # Alterna quem começa a próxima rodada, se necessário
             if ganhador_rodada == carta1:
                 mostrar_mensagem(f'{primeiro.nome} venceu a rodada!')
             elif ganhador_rodada == carta2:
@@ -287,6 +306,7 @@ def main():
         if mao_encerrada:
             continue
 
+        # Processa o fim da mão caso não tenha sido encerrada no loop
         vencedor_mao = controller.processar_fim_mao()
         if vencedor_mao:
             mostrar_mensagem(f'\n{vencedor_mao.nome} venceu a mão e ganhou {controller.pontos_truco} ponto(s)!')
@@ -300,6 +320,7 @@ def main():
             controller.historico_rodadas = []
         controller.mostrar_estado()
 
+    # Exibe mensagem final do jogo
     mostrar_mensagem(f'\nFIM DE JOGO! Vencedor: {controller.determinar_vencedor().nome} com {controller.determinar_vencedor().pontos} pontos!')
 
 if __name__ == '__main__':
