@@ -159,9 +159,11 @@ class Bot():
         self.rodadas += rodadas
     
     def resetar(self):
-        self.pontos = 0
+        # NÃO zera os pontos!
         self.mao = []
         self.flor = False
+        self.pediuTruco = False
+        # ...outros estados temporários se necessário...
 
     def checaMao(self):
         return self.mao
