@@ -103,30 +103,49 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
         estado['pode_truco'] = True
         # Turno do jogador atual
         if jogador_atual == controller.jogador1:
-            carta_idx1, estado, mao_encerrada = turno_jogador_humano(
-                jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada, montar_prompt_acao)
-            if mao_encerrada or carta_idx1 is None:
+            while True:
+                carta_idx1, estado, mao_encerrada = turno_jogador_humano(
+                    jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada, montar_prompt_acao)
+                if mao_encerrada:
+                    break
+                if carta_idx1 is not None:
+                    break
+            if mao_encerrada:
                 break
             carta1 = jogador_atual.jogarCarta(carta_idx1)
             mostrar_mensagem(f'{jogador_atual.nome} jogou: {carta1.numero} de {carta1.naipe}')
         else:
-            carta_idx1, estado, mao_encerrada = turno_jogador_bot(
-                jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada)
+            while True:
+                carta_idx1, estado, mao_encerrada = turno_jogador_bot(
+                    jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada)
+                if mao_encerrada:
+                    break
+                # Para bot, sempre joga carta após turno
+                break
             if mao_encerrada:
                 break
             carta1 = jogador_atual.jogarCarta(controller.cbr, controller)
             mostrar_mensagem(f'{jogador_atual.nome} jogou: {carta1.numero} de {carta1.naipe}')
         # Turno do oponente
         if jogador_oponente == controller.jogador1:
-            carta_idx2, estado, mao_encerrada = turno_jogador_humano(
-                jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada, montar_prompt_acao)
-            if mao_encerrada or carta_idx2 is None:
+            while True:
+                carta_idx2, estado, mao_encerrada = turno_jogador_humano(
+                    jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada, montar_prompt_acao)
+                if mao_encerrada:
+                    break
+                if carta_idx2 is not None:
+                    break
+            if mao_encerrada:
                 break
             carta2 = jogador_oponente.jogarCarta(carta_idx2)
             mostrar_mensagem(f'{jogador_oponente.nome} jogou: {carta2.numero} de {carta2.naipe}')
         else:
-            carta_idx2, estado, mao_encerrada = turno_jogador_bot(
-                jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada)
+            while True:
+                carta_idx2, estado, mao_encerrada = turno_jogador_bot(
+                    jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada)
+                if mao_encerrada:
+                    break
+                break
             if mao_encerrada:
                 break
             carta2 = jogador_oponente.jogarCarta(controller.cbr, controller)
