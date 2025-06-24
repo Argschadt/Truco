@@ -12,26 +12,30 @@ def exibir_mao_jogador(controller):
 
 
 def processar_fim_mao(controller, primeiro_jogador, segundo_jogador):
-    """Processa o fim da mão, mostrando mensagens e definindo o próximo primeiro jogador."""
+    """Processa o fim da mão, mostrando mensagens."""
     vencedor_mao = controller.processar_fim_mao()
     if vencedor_mao:
         mostrar_mensagem(f'\n{vencedor_mao.nome} venceu a mão e ganhou {controller.pontos_truco} ponto(s)!')
-        controller.definir_proximo_primeiro(vencedor_mao)
     elif len(controller.historico_rodadas) == 3 and controller.historico_rodadas.count(1) == controller.historico_rodadas.count(2):
         mostrar_mensagem('\nA mão terminou empatada!')
-        proximo_primeiro = controller.jogador2 if primeiro_jogador == controller.jogador1 else controller.jogador1
-        controller.definir_proximo_primeiro(proximo_primeiro)
         controller.historico_rodadas = []
 
 
 def loop_jogo(controller, primeiro_da_partida):
-    """Executa o loop principal do jogo."""
+    """Executa o loop principal do jogo com alternância fixa de quem começa a mão."""
+    # Alternância: 0 para jogador1 começa, 1 para jogador2 começa
+    alternancia = 0 if controller.jogador1 == primeiro_da_partida else 1
     while not controller.fim_de_jogo():
         mostrar_estado(controller)
         controller.reiniciar_mao()
         controller.historico_rodadas = []
         exibir_mao_jogador(controller)
-        primeiro_jogador, segundo_jogador = definir_primeiro_e_segundo(controller)
+        # Alterna o primeiro jogador a cada mão
+        if alternancia % 2 == 0:
+            primeiro_jogador, segundo_jogador = controller.jogador1, controller.jogador2
+        else:
+            primeiro_jogador, segundo_jogador = controller.jogador2, controller.jogador1
+        alternancia += 1
         mao_encerrada, _, primeiro_jogador, segundo_jogador = jogar_mao(
             controller, primeiro_jogador, segundo_jogador, primeiro_da_partida, novo_estado_mao
         )
