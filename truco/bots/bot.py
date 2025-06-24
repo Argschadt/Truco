@@ -71,6 +71,7 @@ class Bot():
         self.cartas_jogadas_humano = [0, 0, 0]
     
     def jogarCarta(self, cbr, controller=None):
+        print("[DEBUG] Função jogarCarta chamada")
         self.atualizar_modelo_registro(controller)
         if not self.mao:
             return None
@@ -254,6 +255,7 @@ class Bot():
         self.modeloRegistro.quemContraFlorResto = getattr(controller, 'quemContraFlorResto', 0)
 
     def pedir_truco(self, cbr=None, controller=None):
+        print("[DEBUG] Função pedir_truco chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai pedir truco usando CBR se disponível."""
         if cbr is not None:
@@ -263,6 +265,7 @@ class Bot():
                 return maioria == 2
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
+        print("[DEBUG] Função aceitar_truco chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai aceitar truco usando CBR se disponível."""
         if cbr is not None:
@@ -272,6 +275,7 @@ class Bot():
                 return maioria == 1 or maioria == 0
 
     def pedir_envido(self, cbr=None, controller=None):
+        print("[DEBUG] Função pedir_envido chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai pedir envido usando CBR se disponível."""
         df = cbr.retornarSimilares(self.modeloRegistro)
@@ -286,14 +290,11 @@ class Bot():
             return maioria_RoboGanhar == 2 or maioria_HumanoFugir == 1
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
+        print("[DEBUG] Função aceitar_envido chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai aceitar envido usando CBR se disponível."""
         df = cbr.retornarSimilares(self.modeloRegistro)
         df_filtrado = df[(df['quemNegouEnvido'] == 0) & (df['pontosEnvidoRobo'] == self.modeloRegistro.pontosEnvidoRobo)]
-        #print(df_filtrado[[
-        #        'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo',
-        #        'naipeCartaAltaRobo', 'naipeCartaMediaRobo', 'naipeCartaBaixaRobo',
-        #        'pontosEnvidoRobo', 'quemPediuEnvido', 'quemNegouEnvido']])
         if not df_filtrado.empty:
             maioria_RoboGanhar = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
             return maioria_RoboGanhar == 2
@@ -301,18 +302,6 @@ class Bot():
             maioria_RoboGanhar = df['quemGanhouEnvido'].value_counts().idxmax()
             return maioria_RoboGanhar == 2
 
-    def pedir_flor(self, cbr=None, controller=None):
-        self.atualizar_modelo_registro(controller)
-        """Decide se vai pedir flor usando CBR se disponível."""
-        """ if cbr is not None:
-            df = cbr.retornarSimilares(self.modeloRegistro)
-            if not df.empty and 'quemFlor' in df.columns:
-                maioria = df['quemFlor'].value_counts().idxmax()
-                return maioria == 2 """
-                
-        #NAO ACHEI REGISTRO DE PEDIDO DE FLOR NO CSV
-        return self.flor
-    
     def registrar_resultado_rodada(self, resultado, controller=None):
         """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
         self.rodadas += 1
