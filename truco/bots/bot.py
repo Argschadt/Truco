@@ -33,7 +33,7 @@ class Bot():
         self.indices = [0, 1, 2]
         
         
-        available_suits = list(set(carta.naipe for carta in baralho.cartas))
+        """ available_suits = list(set(carta.naipe for carta in baralho.cartas))
         if available_suits:
             chosen_suit = random.choice(available_suits)
             
@@ -57,9 +57,9 @@ class Bot():
                 for i in range(3):
                     self.mao.append(baralho.retirarCarta())
                 self.flor = self.checaFlor()
-        else:
-            for i in range(3):
-                self.mao.append(baralho.retirarCarta())
+        else: """
+        for i in range(3):
+            self.mao.append(baralho.retirarCarta())
         self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
