@@ -150,7 +150,7 @@ def processar_acao_truco(
 
     # Permite Envido/Flor antes da resposta ao Truco, apenas na primeira rodada
     if rodada == 1 and envido_pode_ser_pedido and estado is not None and not (estado['envido_pedido'] if isinstance(estado, dict) else estado.envido_pedido):
-        prompt, opcoes, _, _, _, _ = prompt_envido_flor_options(estado, jogador_que_responde) if isinstance(estado, dict) else prompt_envido_flor_options(estado.__dict__, jogador_que_responde)
+        prompt, opcoes, _, _, _, _ = prompt_envido_flor_options(estado, jogador_que_responde, controller) if isinstance(estado, dict) else prompt_envido_flor_options(estado.__dict__, jogador_que_responde, controller)
         # Se o retorno do prompt é uma escolha automática do bot (ex: 'l', 'e', ...), já processa direto
         if isinstance(prompt, str) and prompt in ['l', 'e', 'r', 'f', '']:
             if prompt in opcoes:

@@ -41,3 +41,12 @@ class ModeloRegistro:
 
     def to_dataframe(self):
         return pd.DataFrame([self.to_dict()])
+
+    def __str__(self):
+        df = self.to_dataframe()
+        # Remove colunas cujos valores são 0
+        df = df.loc[:, (df != 0).any(axis=0)]
+        return df.to_string(index=False)
+
+    def __repr__(self):
+        return self.__str__()

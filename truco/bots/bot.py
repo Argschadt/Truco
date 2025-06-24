@@ -70,7 +70,7 @@ class Bot():
         self.cartas_jogadas_humano = [0, 0, 0]
     
     def jogarCarta(self, cbr, controller=None):
-        print("[DEBUG] Função jogarCarta chamada")
+        #print("[DEBUG] Função jogarCarta chamada")
         self.atualizar_modelo_registro(controller)
         if not self.mao:
             return None
@@ -210,11 +210,14 @@ class Bot():
         if controller is None:
             return
 
+        # Debug: printa o estado atual do modeloRegistro
+        print('[DEBUG][atualizar_modelo_registro] Estado atual do modeloRegistro:')
+        print(self.modeloRegistro)
+
         # jogadorMao
         if hasattr(controller, 'jogador_mao'):
             self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2                    
 
-        # Controle robusto das cartas jogadas
         # Inicializa listas se não existirem
         if not hasattr(self, 'cartas_jogadas_robo'):
             self.cartas_jogadas_robo = [0, 0, 0]
@@ -254,7 +257,7 @@ class Bot():
         self.modeloRegistro.quemContraFlorResto = getattr(controller, 'quemContraFlorResto', 0)
 
     def pedir_truco(self, cbr=None, controller=None):
-        print("[DEBUG] Função pedir_truco chamada")
+        #print("[DEBUG] Função pedir_truco chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai pedir truco usando CBR se disponível."""
         if cbr is not None:
@@ -264,7 +267,7 @@ class Bot():
                 return maioria == 2
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
-        print("[DEBUG] Função aceitar_truco chamada")
+        #print("[DEBUG] Função aceitar_truco chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai aceitar truco usando CBR se disponível."""
         if cbr is not None:
@@ -274,7 +277,7 @@ class Bot():
                 return maioria == 1 or maioria == 0
 
     def pedir_envido(self, cbr=None, controller=None):
-        print("[DEBUG] Função pedir_envido chamada")
+        #print("[DEBUG] Função pedir_envido chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai pedir envido usando CBR se disponível."""
         df = cbr.retornarSimilares(self.modeloRegistro)
@@ -289,7 +292,7 @@ class Bot():
             return maioria_RoboGanhar == 2 or maioria_HumanoFugir == 1
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
-        print("[DEBUG] Função aceitar_envido chamada")
+        #print("[DEBUG] Função aceitar_envido chamada")
         self.atualizar_modelo_registro(controller)
         """Decide se vai aceitar envido usando CBR se disponível."""
         df = cbr.retornarSimilares(self.modeloRegistro)
@@ -366,7 +369,7 @@ class Bot():
         return max_envido
 
     def pedir_flor(self, cbr=None, controller=None):
-        print("[DEBUG] Função pedir_flor chamada")
+        #print("[DEBUG] Função pedir_flor chamada")
         self.atualizar_modelo_registro(controller)
         # Não usa CBR: pede Flor apenas se tiver Flor
         return self.flor
