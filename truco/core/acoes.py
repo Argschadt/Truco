@@ -136,7 +136,6 @@ def processar_acao_truco(
         truco_pode_ser_pedido = True
         envido_pode_ser_pedido = False
         quem_pode_pedir_truco = jogador_que_responde
-        # Não encerra a mão, apenas retorna que a mão continua
         return False, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, False
     else:
         mostrar_mensagem(f"{jogador_que_responde.nome} correu do Truco!")
