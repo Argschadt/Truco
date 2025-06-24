@@ -72,6 +72,15 @@ class Bot():
     
     def jogarCarta(self, cbr, controller=None):
         self.atualizar_modelo_registro(controller)
+        if not self.mao:
+            return None
+        # Decide qual carta jogar
+        carta_idx = self._decidir_carta_a_jogar(cbr)
+        return self._remover_carta_da_mao(carta_idx)
+
+    def _decidir_carta_a_jogar(self, cbr):
+        """Decide o índice da carta a ser jogada, usando CBR se possível, senão a menor carta."""
+        # Atualiza os índices se necessário
         if self.indices is None or len(self.indices) != len(self.mao):
             self.indices = list(range(len(self.mao)))
         if not self.mao:
@@ -87,19 +96,7 @@ class Bot():
 
         # Se não há CBR ou coluna correspondente, joga a menor carta
         if df.empty or ordem_carta_jogada not in df.columns:
-            print("Jogou MENOR CARTA!!!!!!!!!!!!")
-            # Encontra o índice da menor carta na pontuacaoCartas
-            menor_pontuacao = min(self.pontuacaoCartas)
-            idx_mao = self.pontuacaoCartas.index(menor_pontuacao)
-            # O índice real na mão é self.indices[idx_mao]
-            indice_real = self.indices[idx_mao]
-            # Remove dos controles
-            self.indices.pop(idx_mao)
-            self.pontuacaoCartas.pop(idx_mao)
-            carta_jogada = self.mao.pop(idx_mao)
-            # Ajusta os índices restantes
-            self.indices = list(range(len(self.mao)))
-            return carta_jogada
+            return self._indice_menor_carta()
 
         # Verifica qual carta (alta, media, baixa) foi jogada pela maioria
         cartas_mao = {
@@ -118,8 +115,18 @@ class Bot():
         carta_escolhida = cartas_mao[tipo_maioria]
         # Se a carta escolhida não está mais na mão (já foi jogada), pega a menor
         if carta_escolhida not in self.pontuacaoCartas:
-            carta_escolhida = min(self.pontuacaoCartas)
-        idx_mao = self.pontuacaoCartas.index(carta_escolhida)
+            return self._indice_menor_carta()
+        return self.pontuacaoCartas.index(carta_escolhida)
+
+    def _indice_menor_carta(self):
+        """Retorna o índice da menor carta na mão atual."""
+        menor_pontuacao = min(self.pontuacaoCartas)
+        return self.pontuacaoCartas.index(menor_pontuacao)
+
+    def _remover_carta_da_mao(self, idx_mao):
+        """Remove a carta da mão, atualiza os estados e retorna a carta jogada."""
+        if idx_mao is None or not self.mao:
+            return None
         self.indices.pop(idx_mao)
         carta_jogada = self.mao.pop(idx_mao)
         self.pontuacaoCartas.pop(idx_mao)

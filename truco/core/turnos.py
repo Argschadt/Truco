@@ -167,8 +167,6 @@ def turno_jogador_bot(primeiro_jogador, segundo_jogador, controller, estado, pri
     carta_idx = None
     mao_encerrada = False
     while True:
-        # Debug: mostra o nome do bot que está jogando
-        print(f"[DEBUG] Bot atual: {getattr(primeiro_jogador, 'nome', str(primeiro_jogador))}")
         # Checa possibilidades de pedir envido, real envido, falta envido ou flor
         pode_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
         pode_flor = estado['pode_flor'] and not estado['flor_pedida'] and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
