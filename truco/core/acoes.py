@@ -18,14 +18,29 @@ class EstadoEnvido:
 
 # Funções de ações especiais do Truco Gaúcho
 
-def prompt_envido_flor_options(estado, jogador_que_responde):
+def prompt_envido_flor_options(estado, jogador_que_responde, controller=None):
     """
-    Monta o prompt e opções para pedir Envido/Flor antes do Truco.
+    Monta o prompt e opções para pedir Envido/Flor antes de responder ao Truco.
+    Se o jogador que responde for o Bot, toma a decisão automaticamente.
     """
     pode_pedir_envido = estado['pode_envido'] and not estado['envido_pedido']
     pode_pedir_flor = estado['pode_flor'] and not estado['flor_pedida'] and jogador_que_responde.checaFlor() and len(jogador_que_responde.mao) == 3
     pode_pedir_real_envido = pode_pedir_envido
     pode_pedir_falta_envido = pode_pedir_envido
+    if hasattr(jogador_que_responde, 'nome') and jogador_que_responde.nome == 'Bot':
+        # Decisão automática do bot: prioriza Flor > Envido > Real Envido > Falta Envido
+        # Garante que controller não é None antes de acessar controller.cbr
+        cbr = controller.cbr if controller is not None else None
+        if pode_pedir_flor and hasattr(jogador_que_responde, 'pedir_flor') and jogador_que_responde.pedir_flor(cbr, controller):
+            return 'l', ['l'], pode_pedir_envido, pode_pedir_real_envido, pode_pedir_falta_envido, pode_pedir_flor
+        if pode_pedir_envido and hasattr(jogador_que_responde, 'pedir_envido') and jogador_que_responde.pedir_envido(cbr, controller):
+            return 'e', ['e'], pode_pedir_envido, pode_pedir_real_envido, pode_pedir_falta_envido, pode_pedir_flor
+        if pode_pedir_real_envido and hasattr(jogador_que_responde, 'pedir_real_envido') and jogador_que_responde.pedir_real_envido(cbr, controller):
+            return 'r', ['r'], pode_pedir_envido, pode_pedir_real_envido, pode_pedir_falta_envido, pode_pedir_flor
+        if pode_pedir_falta_envido and hasattr(jogador_que_responde, 'pedir_falta_envido') and jogador_que_responde.pedir_falta_envido(cbr, controller):
+            return 'f', ['f'], pode_pedir_envido, pode_pedir_real_envido, pode_pedir_falta_envido, pode_pedir_flor
+        # Se não quiser pedir nada
+        return '', [], pode_pedir_envido, pode_pedir_real_envido, pode_pedir_falta_envido, pode_pedir_flor
     prompt = "Deseja pedir Envido/Flor antes de responder ao Truco?\n"
     opcoes = []
     if pode_pedir_envido:
@@ -46,6 +61,7 @@ def prompt_envido_flor_options(estado, jogador_que_responde):
 def tratar_escolha_envido_flor(escolha, estado, controller, jogador_que_responde, jogador_que_pediu, primeiro_da_partida):
     """
     Processa a escolha do jogador para Envido/Flor antes do Truco.
+    Retorna True se a mão foi encerrada (por Flor), False caso contrário.
     """
     if escolha == 'e':
         estado['envido_pedido'] = True
@@ -53,12 +69,14 @@ def tratar_escolha_envido_flor(escolha, estado, controller, jogador_que_responde
         resultado = processar_acao_envido(controller, jogador_que_responde, jogador_que_pediu, 'envido', 2, primeiro_da_partida)
         if isinstance(resultado, tuple) and len(resultado) == 7:
             _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
+        return False
     elif escolha == 'r':
         estado['envido_pedido'] = True
         estado['pode_envido'] = False
         resultado = processar_acao_envido(controller, jogador_que_responde, jogador_que_pediu, 'real_envido', 3, primeiro_da_partida)
         if isinstance(resultado, tuple) and len(resultado) == 7:
             _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
+        return False
     elif escolha == 'f':
         estado['envido_pedido'] = True
         estado['pode_envido'] = False
@@ -66,12 +84,19 @@ def tratar_escolha_envido_flor(escolha, estado, controller, jogador_que_responde
         resultado = processar_acao_envido(controller, jogador_que_responde, jogador_que_pediu, 'falta_envido', pontos_falta, primeiro_da_partida)
         if isinstance(resultado, tuple) and len(resultado) == 7:
             _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
+        return False
     elif escolha == 'l':
         estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resolver_flor(
             jogador_que_responde, jogador_que_pediu, controller, calcular_pontuacao,
             estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'],
             primeiro_da_partida
         )
+        # Se alguém atingiu a pontuação máxima, encerra a mão
+        pontos_max = getattr(controller, 'pontos_maximos', 15)
+        if controller.jogador1.pontos >= pontos_max or controller.jogador2.pontos >= pontos_max:
+            return True
+        return False
+    return False
 
 def obter_resposta_truco(jogador_que_responde, controller):
     """
@@ -126,9 +151,18 @@ def processar_acao_truco(
     # Permite Envido/Flor antes da resposta ao Truco, apenas na primeira rodada
     if rodada == 1 and envido_pode_ser_pedido and estado is not None and not (estado['envido_pedido'] if isinstance(estado, dict) else estado.envido_pedido):
         prompt, opcoes, _, _, _, _ = prompt_envido_flor_options(estado, jogador_que_responde) if isinstance(estado, dict) else prompt_envido_flor_options(estado.__dict__, jogador_que_responde)
-        escolha = input(prompt).strip().lower()
-        if escolha in opcoes:
-            tratar_escolha_envido_flor(escolha, estado, controller, jogador_que_responde, jogador_que_pediu, primeiro_da_partida)
+        # Se o retorno do prompt é uma escolha automática do bot (ex: 'l', 'e', ...), já processa direto
+        if isinstance(prompt, str) and prompt in ['l', 'e', 'r', 'f', '']:
+            if prompt in opcoes:
+                mao_encerrada = tratar_escolha_envido_flor(prompt, estado, controller, jogador_que_responde, jogador_que_pediu, primeiro_da_partida)
+                if mao_encerrada:
+                    return False, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, True
+        else:
+            escolha = input(prompt).strip().lower()
+            if escolha in opcoes:
+                mao_encerrada = tratar_escolha_envido_flor(escolha, estado, controller, jogador_que_responde, jogador_que_pediu, primeiro_da_partida)
+                if mao_encerrada:
+                    return False, etapa_truco, truco_pode_ser_pedido, envido_pode_ser_pedido, quem_pode_pedir_truco, True
 
     resposta = obter_resposta_truco(jogador_que_responde, controller)
     if resposta == 's':

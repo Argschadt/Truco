@@ -32,7 +32,7 @@ class Bot():
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
-        """ # Obter todos os naipes disponíveis no baralho
+        
         available_suits = list(set(carta.naipe for carta in baralho.cartas))
         if available_suits:
             chosen_suit = random.choice(available_suits)
@@ -57,10 +57,9 @@ class Bot():
                 for i in range(3):
                     self.mao.append(baralho.retirarCarta())
                 self.flor = self.checaFlor()
-        else: """
-            # Fallback: criação padrão de mão
-        for i in range(3):
-            self.mao.append(baralho.retirarCarta())
+        else:
+            for i in range(3):
+                self.mao.append(baralho.retirarCarta())
         self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
@@ -365,3 +364,9 @@ class Bot():
         if max_envido == 0:
             max_envido = max([v for sub in naipes.values() for v in sub])
         return max_envido
+
+    def pedir_flor(self, cbr=None, controller=None):
+        print("[DEBUG] Função pedir_flor chamada")
+        self.atualizar_modelo_registro(controller)
+        # Não usa CBR: pede Flor apenas se tiver Flor
+        return self.flor
