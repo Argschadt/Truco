@@ -307,8 +307,17 @@ def processar_acao_envido(
     pontos_envido: pontos atuais da aposta
     Retorno: Tuple com resultado e estado atualizado
     """
+    if tipo_envido == 'envido':
+        tp_envido = 1
+    elif tipo_envido == 'real_envido':
+        tp_envido = 2
+    elif tipo_envido == 'falta_envido':
+        tp_envido = 3
+    controller.pedir_envido(quem_pediu, tp_envido)
     pontos_falta = 30 - max(controller.jogador1.pontos, controller.jogador2.pontos)
     resposta = obter_resposta_envido(quem_responde, tipo_envido, pontos_falta, controller)
+    if (resposta == 'n'):
+        controller.recusar_envido(quem_responde, tp_envido)
     return processar_resultado_envido(resposta, controller, quem_pediu, quem_responde, tipo_envido, pontos_envido, pontos_falta, primeiro_da_partida)
 
 def obter_decisao_flor_bot(quem_responde):

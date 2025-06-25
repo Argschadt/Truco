@@ -190,10 +190,16 @@ class GameController:
                 return self.jogador2
         return None
 
-    def pedir_envido(self, quem_pediu):
+    def pedir_envido(self, quem_pediu, tp_envido):
         # Envido só pode ser pedido na primeira rodada
         self.envido_pedido = True
         self.ultimo_envido = quem_pediu
+        if tp_envido == 1:  # Envido
+            self.modeloRegistro.quemPediuEnvido = 1 if quem_pediu == self.jogador1 else 2
+        elif tp_envido == 2:  # Real Envido
+            self.modeloRegistro.quemPediuRealEnvido = 1 if quem_pediu == self.jogador1 else 2
+        elif tp_envido == 3:  # Falta Envido
+            self.modeloRegistro.quemPediuFaltaEnvido = 1 if quem_pediu == self.jogador1 else 2
 
     def aceitar_envido(self, aceitou):
         if not aceitou:
@@ -207,6 +213,11 @@ class GameController:
                 calcular_pontuacao(self.jogador2, 'envido', 1)
                 return self.jogador2
         return None
+    
+    def recusar_envido(self, quem_pediu, tp_envido):
+        """Registra recusa de envido."""
+        self.envido_pedido = True
+        self.modeloRegistro.quemNegouEnvido = 1 if quem_pediu == self.jogador1 else 2
 
     def pedir_flor(self, quem_pediu):
         """Registra pedido de flor."""
@@ -410,7 +421,6 @@ class GameController:
             return
             
         idx = rodada_num - 1  # Converter para índice 0-based
-        print(f"[DEBUG] Registrando carta jogada: Jogador: {jogador.nome}, Valor: {carta_valor}, Rodada: {rodada_num}")
         if jogador == self.jogador1:
             if not hasattr(self.jogador1, 'cartas_jogadas_humano'):
                 self.jogador1.cartas_jogadas_humano = [0, 0, 0]
@@ -439,3 +449,8 @@ class GameController:
     def definir_ganhador_flor(self, ganhador):
         """Define quem ganhou a flor."""
         self.quemGanhouFlor = 1 if ganhador == self.jogador1 else 2
+
+    def zerar_modelo_registro(self):
+        """Reseta o modeloRegistro para o estado inicial."""
+        print("[DEBUG] Resetando modeloRegistro para o estado inicial.")
+        self.modeloRegistro = ModeloRegistro()

@@ -103,6 +103,7 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
     from truco.core.turnos import turno_jogador_humano, montar_prompt_acao, turno_jogador_bot
     estado = novo_estado_mao()
     mao_encerrada = False
+    controller.zerar_modelo_registro()
     for rodada in range(1, 4):
         if controller.mao_decidida():
             break
@@ -148,8 +149,19 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
             carta2 = jogador_oponente.jogarCarta(carta_idx2)
             registrar_jogada(controller, jogador_oponente, carta2, rodada, humano=True)
         else:
+             # jogador bot
+            while True:
+                carta_idx1, estado, mao_encerrada = turno_jogador_bot(
+                    jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada)
+                if mao_encerrada:
+                    break
+                # para bot, sempre joga carta após turno
+                break
+            if mao_encerrada:
+                break
+            # usa helper para bot
             carta2 = jogar_carta_bot(jogador_oponente, controller.cbr, controller)
-            registrar_jogada(controller, jogador_oponente, carta2, rodada)
+            registrar_jogada(controller, jogador_oponente, carta1, rodada)
         # Avalia resultado da rodada
         ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, jogador_atual, jogador_oponente)
         exibir_resultado_rodada(ganhador_rodada, jogador_atual, jogador_oponente, carta1, carta2)
