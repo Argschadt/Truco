@@ -311,14 +311,8 @@ class GameController:
         self.modeloRegistro.quemValeQuatro = getattr(self, 'quemValeQuatro', 0)
         self.modeloRegistro.quemGanhouValeQuatro = getattr(self, 'quemGanhouValeQuatro', 0)
         
-        # Envido - calcular pontos apenas se possível
-        try:
-            if hasattr(self.jogador2, 'calcular_pontos_envido') and hasattr(self.jogador2, 'mao') and self.jogador2.mao:
-                self.modeloRegistro.pontosEnvidoRobo = self.jogador2.calcular_pontos_envido()
-            else:
-                self.modeloRegistro.pontosEnvidoRobo = 0
-        except Exception:
-            self.modeloRegistro.pontosEnvidoRobo = 0
+        # Envido 
+        self.modeloRegistro.pontosEnvidoRobo = self.jogador2.calcular_pontos_envido()
             
         self.modeloRegistro.quemPediuEnvido = 1 if getattr(self, 'ultimo_envido', None) == self.jogador1 else (2 if getattr(self, 'ultimo_envido', None) == self.jogador2 else 0)
         self.modeloRegistro.quemGanhouEnvido = getattr(self, 'quemGanhouEnvido', 0)

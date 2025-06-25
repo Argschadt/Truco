@@ -111,7 +111,7 @@ class CbrUpdated():
 
     def retornarSimilares(self, registro):
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, limit=100)
+        retriever = cbrkit.retrieval.build(global_sim, limit=20)
         query = self.montar_query_do_registro(registro)
         if registro.jogadorMao == 1:
             self.gerarCaseBase_mao1()
@@ -123,13 +123,9 @@ class CbrUpdated():
         df_trad = jogadas_similares_df.transpose()
         casos = [row[0] for _, row in df_trad.iterrows()]
         df_final = pd.DataFrame(casos)
-        # Seleciona apenas idMao e os campos da query (se existirem no df)
-        campos_para_mostrar = ['idMao'] + [campo for campo in query.keys() if campo in df_final.columns]
-        if 'idMao' not in df_final.columns:
-            # Se idMao não está presente, tenta resetar o índice para mostrar como coluna
-            df_final = df_final.reset_index().rename(columns={'index': 'idMao'})
-        print('\nTop 10 registros mais semelhantes:')
-        print(df_final[campos_para_mostrar].head(10))
+        pd.set_option('display.max_columns', 50)
+        pd.set_option('display.width', 10000)      # Set a large enough width to prevent wrapping
+        print(df_final.head(20))
         return df_final
 
     def global_similarity(self):

@@ -13,7 +13,7 @@ def jogar_carta_bot(jogador, cbr, controller):
 def registrar_jogada(controller, jogador, carta, rodada_num, humano=False):
     """Registra a jogada do jogador e atualiza o modelo de registro."""
     pontos = carta.retornarPontosCarta(carta)
-    print(f'\n{jogador.nome} jogou: {carta.numero} de {carta.naipe} ({pontos} pontos)')
+    print(f'\n{jogador.nome} jogou: {carta.numero} de {carta.naipe}')
     if humano:
         controller.registrar_carta_jogada(jogador, pontos, rodada_num)
     else:

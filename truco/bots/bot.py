@@ -94,10 +94,7 @@ class Bot():
         for tipo in opcoes_ordenadas:
             carta_escolhida = cartas_mao[tipo]
             if carta_escolhida in self.pontuacaoCartas:
-                print(f"[DEBUG] Carta escolhida: {carta_escolhida} do tipo {tipo}")
                 return self.pontuacaoCartas.index(carta_escolhida)
-        # Se nenhuma das três está disponível, joga a menor carta
-        print(f"[DEBUG] Nenhuma das cartas da maioria disponível, jogando a menor carta.")
         return self._indice_menor_carta()
 
     def _indice_menor_carta(self):
@@ -201,34 +198,34 @@ class Bot():
         controller.atualizar_modelo_registro()
         if cbr is not None:
             df = cbr.retornarSimilares(controller.modeloRegistro)
-            if not df.empty and 'quemNegouTruco' in df.columns:
-                maioria = df['quemNegouTruco'].value_counts().idxmax()
-                return maioria == 1 or maioria == 0
+            if (valor_truco == 2):
+                df_filtrado = df[(df['quemTruco'] == 1 )]
+                maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
+                return maioria == 2
+            if (valor_truco == 3):
+                df_filtrado = df[(df['quemRetruco'] == 1 )]
+                maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
+                return maioria == 2
+            if (valor_truco == 4):
+                df_filtrado = df[(df['quemValeQuatro'] == 1 )]
+                maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
+                return maioria == 2
 
     def pedir_envido(self, cbr=None, controller=None):
-        #print("[DEBUG] Função pedir_envido chamada")
         controller.atualizar_modelo_registro()
         df = cbr.retornarSimilares(controller.modeloRegistro)
-        df_filtrado = df[(df['quemNegouEnvido'].isin([1, 2])) & (df['pontosEnvidoRobo'] == controller.modeloRegistro.pontosEnvidoRobo)]
+        df_filtrado = df[(df['quemPediuEnvido'] != 0)]
         if not df_filtrado.empty:
-            maioria_RoboGanhar = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
-            maioria_HumanoFugir = df_filtrado['quemNegouEnvido'].value_counts().idxmax()
-            return maioria_RoboGanhar == 2 or maioria_HumanoFugir == 1
-        else:
-            maioria_RoboGanhar = df['quemGanhouEnvido'].value_counts().idxmax()
-            maioria_HumanoFugir = df['quemNegouEnvido'].value_counts().idxmax()
-            return maioria_RoboGanhar == 2 or maioria_HumanoFugir == 1
-
+            quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
+            return quemMaisGanhouEnvido == 2
+        
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
         controller.atualizar_modelo_registro()
         df = cbr.retornarSimilares(controller.modeloRegistro)
-        df_filtrado = df[(df['quemNegouEnvido'] == 0) & (df['pontosEnvidoRobo'] == controller.modeloRegistro.pontosEnvidoRobo)]
+        df_filtrado = df[(df['quemPediuEnvido'] != 0)]
         if not df_filtrado.empty:
-            maioria_RoboGanhar = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
-            return maioria_RoboGanhar == 2
-        else:
-            maioria_RoboGanhar = df['quemGanhouEnvido'].value_counts().idxmax()
-            return maioria_RoboGanhar == 2
+            quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
+            return quemMaisGanhouEnvido == 2
 
     def registrar_resultado_rodada(self, resultado, controller=None):
         self.rodadas += 1
