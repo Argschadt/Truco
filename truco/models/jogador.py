@@ -14,6 +14,7 @@ class Jogador():
         self.ultimo = False
         self.flor = False
         self.pediuTruco = False
+        self.cartas_jogadas_humano = [0, 0, 0]
 
     def mostrarOpcoes(self):
         self.mostrarMao()

@@ -159,7 +159,7 @@ def processar_envido_bot(controller, primeiro_jogador, segundo_jogador, tipo, po
     if isinstance(resultado, tuple) and len(resultado) == 7:
         _, _, _, _, estado['flor_pedida'], estado['pode_flor'], estado['pode_envido'] = resultado
 
-def turno_jogador_bot(primeiro_jogador, segundo_jogador, controller, estado, primeiro_da_partida, rodada):
+def turno_jogador_bot(jogador_bot, outro_jogador, controller, estado, primeiro_da_partida, rodada):
     """
     Executa o turno do bot, processando todas as ações possíveis e retorna:
     (carta_idx, estado, mao_encerrada)
@@ -169,34 +169,34 @@ def turno_jogador_bot(primeiro_jogador, segundo_jogador, controller, estado, pri
     while True:
         # Checa possibilidades de pedir envido, real envido, falta envido ou flor
         pode_envido = rodada == 1 and estado['pode_envido'] and not estado['envido_pedido']
-        pode_flor = estado['pode_flor'] and not estado['flor_pedida'] and primeiro_jogador.checaFlor() and len(primeiro_jogador.mao) == 3
+        pode_flor = estado['pode_flor'] and not estado['flor_pedida'] and jogador_bot.checaFlor() and len(jogador_bot.mao) == 3
         # 1. Flor
-        if pode_flor and hasattr(primeiro_jogador, 'pedir_flor') and primeiro_jogador.pedir_flor(controller.cbr, controller):
-            processar_flor(primeiro_jogador, segundo_jogador, controller, estado, primeiro_da_partida)
+        if pode_flor and hasattr(jogador_bot, 'pedir_flor') and jogador_bot.pedir_flor(controller.cbr, controller):
+            processar_flor(jogador_bot, outro_jogador, controller, estado, primeiro_da_partida)
             continue
         # 2. Envido, Real Envido ou Falta Envido
         if pode_envido and not estado['envido_pedido']:
-            if hasattr(primeiro_jogador, 'pedir_envido') and primeiro_jogador.pedir_envido(controller.cbr, controller):
-                processar_envido_bot(controller, primeiro_jogador, segundo_jogador, 'envido', 2, primeiro_da_partida, estado)
+            if hasattr(jogador_bot, 'pedir_envido') and jogador_bot.pedir_envido(controller.cbr, controller):
+                processar_envido_bot(controller, jogador_bot, outro_jogador, 'envido', 2, primeiro_da_partida, estado)
                 continue
-            if hasattr(primeiro_jogador, 'pedir_real_envido') and primeiro_jogador.pedir_real_envido(controller.cbr):
-                processar_envido_bot(controller, primeiro_jogador, segundo_jogador, 'real_envido', 3, primeiro_da_partida, estado)
+            if hasattr(jogador_bot, 'pedir_real_envido') and jogador_bot.pedir_real_envido(controller.cbr):
+                processar_envido_bot(controller, jogador_bot, outro_jogador, 'real_envido', 3, primeiro_da_partida, estado)
                 continue
-            if hasattr(primeiro_jogador, 'pedir_falta_envido') and primeiro_jogador.pedir_falta_envido(controller.cbr):
+            if hasattr(jogador_bot, 'pedir_falta_envido') and jogador_bot.pedir_falta_envido(controller.cbr):
                 pontos_falta = 15 - max(controller.jogador1.pontos, controller.jogador2.pontos)
-                processar_envido_bot(controller, primeiro_jogador, segundo_jogador, 'falta_envido', pontos_falta, primeiro_da_partida, estado)
+                processar_envido_bot(controller, jogador_bot, outro_jogador, 'falta_envido', pontos_falta, primeiro_da_partida, estado)
                 continue
         # 3. Truco
-        if pode_pedir_truco_bot(estado, controller, primeiro_jogador) and hasattr(primeiro_jogador, 'pedir_truco') and primeiro_jogador.pedir_truco(controller.cbr, controller):
+        if pode_pedir_truco_bot(estado, controller, jogador_bot) and hasattr(jogador_bot, 'pedir_truco') and jogador_bot.pedir_truco(controller.cbr, controller):
             resultado, estado['truco_fase'], estado['pode_truco'], estado['pode_envido'], estado['vez_truco'], mao_encerrada = processar_acao_truco(
-                controller, primeiro_jogador, segundo_jogador, estado['truco_fase'], estado['pode_truco'], estado['pode_envido'], estado['vez_truco'], primeiro_da_partida, rodada=rodada, estado=estado)
+                controller, jogador_bot, outro_jogador, estado['truco_fase'], estado['pode_truco'], estado['pode_envido'], estado['vez_truco'], primeiro_da_partida, rodada=rodada, estado=estado)
             if resultado:
                 if mao_encerrada:
                     return None, estado, mao_encerrada
                 continue
         # 4. Jogar carta
-        if hasattr(primeiro_jogador, 'escolher_carta') and len(primeiro_jogador.mao) > 0:
-            carta_idx = primeiro_jogador.escolher_carta(controller.cbr, controller)
+        if hasattr(jogador_bot, 'escolher_carta') and len(jogador_bot.mao) > 0:
+            carta_idx = jogador_bot.escolher_carta(controller.cbr, controller)
         else:
-            carta_idx = 0 if len(primeiro_jogador.mao) > 0 else None
+            carta_idx = 0 if len(jogador_bot.mao) > 0 else None
         return carta_idx, estado, mao_encerrada

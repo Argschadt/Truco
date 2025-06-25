@@ -11,12 +11,16 @@ def jogar_carta_bot(jogador, cbr, controller):
     return jogador.jogarCarta(cbr, controller)
 
 def registrar_jogada(controller, jogador, carta, rodada_num, humano=False):
-    """Registra a jogada do jogador."""
+    """Registra a jogada do jogador e atualiza o modelo de registro."""
     pontos = carta.retornarPontosCarta(carta)
+    print(f'\n{jogador.nome} jogou: {carta.numero} de {carta.naipe} ({pontos} pontos)')
     if humano:
-        controller.jogador2.registrar_carta_humano(pontos, rodada_num, controller)
+        controller.registrar_carta_jogada(jogador, pontos, rodada_num)
     else:
-        controller.jogador2.registrar_carta_jogada(pontos, rodada_num, controller)
+        controller.registrar_carta_jogada(jogador, pontos, rodada_num)
+    # Atualiza o modelo de registro após registrar a jogada
+    if hasattr(controller, 'atualizar_modelo_registro'):
+        controller.atualizar_modelo_registro()
 
 
 def jogar_rodada(controller, jogador_atual, jogador_oponente, rodada, carta_idx, mao_encerrada):
@@ -26,21 +30,24 @@ def jogar_rodada(controller, jogador_atual, jogador_oponente, rodada, carta_idx,
     rodada_num = rodada
     if jogador_atual == controller.jogador1:
         carta1 = jogar_carta_humano(jogador_atual, carta_idx)
-        registrar_jogada(controller, jogador_oponente, carta1, rodada_num, humano=True)
+        registrar_jogada(controller, jogador_atual, carta1, rodada_num, humano=True)
         if jogador_oponente == controller.jogador2:
             carta2 = jogar_carta_bot(jogador_oponente, controller.cbr, controller)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada_num)
         else:
             carta2 = jogar_carta_humano(jogador_oponente, carta_idx)
-        registrar_jogada(controller, jogador_oponente, carta2, rodada_num)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada_num, humano=True)
     else:
         carta1 = jogar_carta_bot(jogador_atual, controller.cbr, controller)
-        registrar_jogada(controller, jogador_oponente, carta1, rodada_num)
+        registrar_jogada(controller, jogador_atual, carta1, rodada_num)
         mostrar_mao(jogador_oponente)
         if jogador_oponente == controller.jogador1:
             carta2 = jogar_carta_humano(jogador_oponente, carta_idx)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada_num, humano=True)
             mostrar_mensagem(f'Você jogou: {carta2.numero} de {carta2.naipe}')
         else:
             carta2 = jogar_carta_bot(jogador_oponente, controller.cbr, controller)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada_num)
     mostrar_mensagem(f'{jogador_atual.nome} jogou: {carta1.numero} de {carta1.naipe}')
     mostrar_mensagem(f'{jogador_oponente.nome} jogou: {carta2.numero} de {carta2.naipe}')
     ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, jogador_atual, jogador_oponente)
@@ -101,31 +108,32 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
             break
         mostrar_mensagem(f'\nRodada {rodada}')
         estado['pode_truco'] = True
-        # Turno do jogador atual
+        # 1ª carta
         if jogador_atual == controller.jogador1:
+            # jogador humano
             while True:
                 carta_idx1, estado, mao_encerrada = turno_jogador_humano(
                     jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada, montar_prompt_acao)
-                if mao_encerrada:
-                    break
-                if carta_idx1 is not None:
+                if mao_encerrada or carta_idx1 is not None:
                     break
             if mao_encerrada:
                 break
             carta1 = jogador_atual.jogarCarta(carta_idx1)
-            mostrar_mensagem(f'{jogador_atual.nome} jogou: {carta1.numero} de {carta1.naipe}')
+            registrar_jogada(controller, jogador_atual, carta1, rodada, humano=True)
         else:
+            # jogador bot
             while True:
                 carta_idx1, estado, mao_encerrada = turno_jogador_bot(
                     jogador_atual, jogador_oponente, controller, estado, primeiro_da_partida, rodada)
                 if mao_encerrada:
                     break
-                # Para bot, sempre joga carta após turno
+                # para bot, sempre joga carta após turno
                 break
             if mao_encerrada:
                 break
-            carta1 = jogador_atual.jogarCarta(controller.cbr, controller)
-            mostrar_mensagem(f'{jogador_atual.nome} jogou: {carta1.numero} de {carta1.naipe}')
+            # usa helper para bot
+            carta1 = jogar_carta_bot(jogador_atual, controller.cbr, controller)
+            registrar_jogada(controller, jogador_atual, carta1, rodada)
         # Turno do oponente
         if jogador_oponente == controller.jogador1:
             while True:
@@ -138,18 +146,10 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
             if mao_encerrada:
                 break
             carta2 = jogador_oponente.jogarCarta(carta_idx2)
-            mostrar_mensagem(f'{jogador_oponente.nome} jogou: {carta2.numero} de {carta2.naipe}')
+            registrar_jogada(controller, jogador_oponente, carta2, rodada, humano=True)
         else:
-            while True:
-                carta_idx2, estado, mao_encerrada = turno_jogador_bot(
-                    jogador_oponente, jogador_atual, controller, estado, primeiro_da_partida, rodada)
-                if mao_encerrada:
-                    break
-                break
-            if mao_encerrada:
-                break
-            carta2 = jogador_oponente.jogarCarta(controller.cbr, controller)
-            mostrar_mensagem(f'{jogador_oponente.nome} jogou: {carta2.numero} de {carta2.naipe}')
+            carta2 = jogar_carta_bot(jogador_oponente, controller.cbr, controller)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada)
         # Avalia resultado da rodada
         ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, jogador_atual, jogador_oponente)
         exibir_resultado_rodada(ganhador_rodada, jogador_atual, jogador_oponente, carta1, carta2)

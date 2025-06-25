@@ -33,7 +33,7 @@ class Bot():
         self.indices = [0, 1, 2]
         
         
-        """ available_suits = list(set(carta.naipe for carta in baralho.cartas))
+        available_suits = list(set(carta.naipe for carta in baralho.cartas))
         if available_suits:
             chosen_suit = random.choice(available_suits)
             
@@ -57,35 +57,40 @@ class Bot():
                 for i in range(3):
                     self.mao.append(baralho.retirarCarta())
                 self.flor = self.checaFlor()
-        else: """
-        for i in range(3):
-            self.mao.append(baralho.retirarCarta())
+        else:
+            for i in range(3):
+                self.mao.append(baralho.retirarCarta())
         self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
         self.forcaMao = sum(self.pontuacaoCartas)
         self.inicializarRegistro(controller)
-        self.atualizar_modelo_registro(controller)
         self.cartas_jogadas_robo = [0, 0, 0]
         self.cartas_jogadas_humano = [0, 0, 0]
     
-    def jogarCarta(self, cbr, controller=None):
+    def jogarCarta(self, cbr=None, controller=None):
         #print("[DEBUG] Função jogarCarta chamada")
-        self.atualizar_modelo_registro(controller)
         if not self.mao:
             return None
+        # Atualiza o modelo de registro antes de decidir a carta
+        if controller:
+            controller.atualizar_modelo_registro()
         # Decide qual carta jogar
-        carta_idx = self._decidir_carta_a_jogar(cbr)
-        return self._remover_carta_da_mao(carta_idx)
+        carta_idx = self._decidir_carta_a_jogar(cbr, controller)
+        carta_jogada = self._remover_carta_da_mao(carta_idx)
+        # Atualiza o modelo de registro após jogar a carta
+        if controller and carta_jogada:
+            controller.atualizar_modelo_registro()
+        return carta_jogada
 
-    def _decidir_carta_a_jogar(self, cbr):
+    def _decidir_carta_a_jogar(self, cbr=None, controller=None):
         """Decide o índice da carta a ser jogada, usando CBR se possível, senão a menor carta."""
         # Atualiza os índices se necessário
         if self.indices is None or len(self.indices) != len(self.mao):
             self.indices = list(range(len(self.mao)))
         if not self.mao:
             return None
-        df = cbr.retornarSimilares(self.modeloRegistro)
+        df = cbr.retornarSimilares(controller.modeloRegistro)
         ordem_carta_jogada = 'CartaRobo'
         if self.indices is not None and len(self.indices) == 3:
             ordem_carta_jogada = 'primeira' + ordem_carta_jogada
@@ -200,88 +205,34 @@ class Bot():
         self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(self.mao[idx_media].retornarNaipe(), 0) if idx_media is not None else 0
         self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(self.mao[idx_baixa].retornarNaipe(), 0) if idx_baixa is not None else 0
 
-        self.modeloRegistro.ganhadorPrimeiraRodada = 3
-        self.modeloRegistro.ganhadorSegundaRodada = 3
-        self.modeloRegistro.ganhadorTerceiraRodada = 3
+        self.modeloRegistro.ganhadorPrimeiraRodada = 0
+        self.modeloRegistro.ganhadorSegundaRodada = 0
+        self.modeloRegistro.ganhadorTerceiraRodada = 0
         
         self.modeloRegistro.pontosEnvidoRobo = self.calcular_pontos_envido()
 
-    def atualizar_modelo_registro(self, controller=None):
-        if controller is None:
-            return
-
-        # Debug: printa o estado atual do modeloRegistro
-        print('[DEBUG][atualizar_modelo_registro] Estado atual do modeloRegistro:')
-        print(self.modeloRegistro)
-
-        # jogadorMao
-        if hasattr(controller, 'jogador_mao'):
-            self.modeloRegistro.jogadorMao = 1 if controller.jogador_mao == self else 2                    
-
-        # Inicializa listas se não existirem
-        if not hasattr(self, 'cartas_jogadas_robo'):
-            self.cartas_jogadas_robo = [0, 0, 0]
-        if not hasattr(self, 'cartas_jogadas_humano'):
-            self.cartas_jogadas_humano = [0, 0, 0]
-        # Atualiza os campos do modelo de registro
-        self.modeloRegistro.primeiraCartaRobo = self.cartas_jogadas_robo[0]
-        self.modeloRegistro.segundaCartaRobo = self.cartas_jogadas_robo[1]
-        self.modeloRegistro.terceiraCartaRobo = self.cartas_jogadas_robo[2]
-        self.modeloRegistro.primeiraCartaHumano = self.cartas_jogadas_humano[0]
-        self.modeloRegistro.segundaCartaHumano = self.cartas_jogadas_humano[1]
-        self.modeloRegistro.terceiraCartaHumano = self.cartas_jogadas_humano[2]
-
-        # Rodadas
-        if hasattr(controller, 'historico_rodadas'):
-            h = controller.historico_rodadas
-            self.modeloRegistro.ganhadorPrimeiraRodada = h[0] if len(h) > 0 else 0
-            self.modeloRegistro.ganhadorSegundaRodada = h[1] if len(h) > 1 else 0
-            self.modeloRegistro.ganhadorTerceiraRodada = h[2] if len(h) > 2 else 0
-
-        # Truco/Retruco/Vale Quatro
-        self.modeloRegistro.quemTruco = getattr(controller, 'quemTruco', 0)
-        self.modeloRegistro.quemGanhouTruco = getattr(controller, 'quemGanhouTruco', 0)
-        self.modeloRegistro.quemRetruco = getattr(controller, 'quemRetruco', 0)
-        self.modeloRegistro.quemValeQuatro = getattr(controller, 'quemValeQuatro', 0)
-
-        # Envido
-        self.modeloRegistro.quemPediuEnvido = getattr(controller, 'quemPediuEnvido', 0)
-        self.modeloRegistro.quemGanhouEnvido = getattr(controller, 'quemGanhouEnvido', 0)
-        self.modeloRegistro.quemPediuRealEnvido = getattr(controller, 'quemPediuRealEnvido', 0)
-        self.modeloRegistro.quemPediuFaltaEnvido = getattr(controller, 'quemPediuFaltaEnvido', 0)
-
-        # Flor/Contra-Flor
-        self.modeloRegistro.quemFlor = getattr(controller, 'quemFlor', 0)
-        self.modeloRegistro.quemGanhouFlor = getattr(controller, 'quemGanhouFlor', 0)
-        self.modeloRegistro.quemContraFlor = getattr(controller, 'quemContraFlor', 0)
-        self.modeloRegistro.quemContraFlorResto = getattr(controller, 'quemContraFlorResto', 0)
-
     def pedir_truco(self, cbr=None, controller=None):
         #print("[DEBUG] Função pedir_truco chamada")
-        self.atualizar_modelo_registro(controller)
-        """Decide se vai pedir truco usando CBR se disponível."""
+        controller.atualizar_modelo_registro()
         if cbr is not None:
-            df = cbr.retornarSimilares(self.modeloRegistro)
+            df = cbr.retornarSimilares(controller.modeloRegistro)
             if not df.empty and 'quemTruco' in df.columns:
                 maioria = df['quemTruco'].value_counts().idxmax()
                 return maioria == 2
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
-        #print("[DEBUG] Função aceitar_truco chamada")
-        self.atualizar_modelo_registro(controller)
-        """Decide se vai aceitar truco usando CBR se disponível."""
+        controller.atualizar_modelo_registro()
         if cbr is not None:
-            df = cbr.retornarSimilares(self.modeloRegistro)
+            df = cbr.retornarSimilares(controller.modeloRegistro)
             if not df.empty and 'quemNegouTruco' in df.columns:
                 maioria = df['quemNegouTruco'].value_counts().idxmax()
                 return maioria == 1 or maioria == 0
 
     def pedir_envido(self, cbr=None, controller=None):
         #print("[DEBUG] Função pedir_envido chamada")
-        self.atualizar_modelo_registro(controller)
-        """Decide se vai pedir envido usando CBR se disponível."""
-        df = cbr.retornarSimilares(self.modeloRegistro)
-        df_filtrado = df[(df['quemNegouEnvido'].isin([1, 2])) & (df['pontosEnvidoRobo'] == self.modeloRegistro.pontosEnvidoRobo)]
+        controller.atualizar_modelo_registro()
+        df = cbr.retornarSimilares(controller.modeloRegistro)
+        df_filtrado = df[(df['quemNegouEnvido'].isin([1, 2])) & (df['pontosEnvidoRobo'] == controller.modeloRegistro.pontosEnvidoRobo)]
         if not df_filtrado.empty:
             maioria_RoboGanhar = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
             maioria_HumanoFugir = df_filtrado['quemNegouEnvido'].value_counts().idxmax()
@@ -292,11 +243,9 @@ class Bot():
             return maioria_RoboGanhar == 2 or maioria_HumanoFugir == 1
 
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
-        #print("[DEBUG] Função aceitar_envido chamada")
-        self.atualizar_modelo_registro(controller)
-        """Decide se vai aceitar envido usando CBR se disponível."""
-        df = cbr.retornarSimilares(self.modeloRegistro)
-        df_filtrado = df[(df['quemNegouEnvido'] == 0) & (df['pontosEnvidoRobo'] == self.modeloRegistro.pontosEnvidoRobo)]
+        controller.atualizar_modelo_registro()
+        df = cbr.retornarSimilares(controller.modeloRegistro)
+        df_filtrado = df[(df['quemNegouEnvido'] == 0) & (df['pontosEnvidoRobo'] == controller.modeloRegistro.pontosEnvidoRobo)]
         if not df_filtrado.empty:
             maioria_RoboGanhar = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
             return maioria_RoboGanhar == 2
@@ -305,15 +254,13 @@ class Bot():
             return maioria_RoboGanhar == 2
 
     def registrar_resultado_rodada(self, resultado, controller=None):
-        """Atualiza o estado do bot após cada rodada (ganhou, perdeu, empatou)."""
         self.rodadas += 1
-        # Pode adicionar lógica de aprendizado ou ajuste de estratégia
-        self.atualizar_modelo_registro(controller)    
-        
+        if controller:
+            controller.atualizar_modelo_registro()
+
     def registrar_resultado_mao(self, resultado, controller=None):
-        """Atualiza o estado do bot após cada mão (ganhou, perdeu, empatou)."""
-        # Pode adicionar lógica de aprendizado ou ajuste de estratégia
-        self.atualizar_modelo_registro(controller)    
+        if controller:
+            controller.atualizar_modelo_registro()
         
     def resetar_estado_mao(self, controller=None):
         """Limpa todos os estados temporários ao fim de uma mão."""
@@ -328,27 +275,8 @@ class Bot():
         self.invido = 0
         self.cartas_jogadas_robo = [0, 0, 0]
         self.cartas_jogadas_humano = [0, 0, 0]
-        self.atualizar_modelo_registro(controller)
-
-    def registrar_carta_jogada(self, carta_valor, rodada_num, controller=None):
-        """Registra uma carta jogada pelo bot no modelo de registro."""
-        if rodada_num == 1:
-            self.cartas_jogadas_robo[0] = carta_valor
-        elif rodada_num == 2:
-            self.cartas_jogadas_robo[1] = carta_valor
-        elif rodada_num == 3:
-            self.cartas_jogadas_robo[2] = carta_valor
-        self.atualizar_modelo_registro(controller)
-
-    def registrar_carta_humano(self, carta_valor, rodada_num, controller=None):
-        """Registra uma carta jogada pelo humano no modelo de registro."""
-        if rodada_num == 1:
-            self.cartas_jogadas_humano[0] = carta_valor
-        elif rodada_num == 2:
-            self.cartas_jogadas_humano[1] = carta_valor
-        elif rodada_num == 3:
-            self.cartas_jogadas_humano[2] = carta_valor
-        self.atualizar_modelo_registro(controller)
+        if controller:
+            controller.atualizar_modelo_registro()
 
     def calcular_pontos_envido(self):
         from truco.utils.pontos import ENVIDO
@@ -370,6 +298,6 @@ class Bot():
 
     def pedir_flor(self, cbr=None, controller=None):
         #print("[DEBUG] Função pedir_flor chamada")
-        self.atualizar_modelo_registro(controller)
+        controller.atualizar_modelo_registro()
         # Não usa CBR: pede Flor apenas se tiver Flor
         return self.flor
