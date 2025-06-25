@@ -32,32 +32,6 @@ class Bot():
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
-        
-        """ available_suits = list(set(carta.naipe for carta in baralho.cartas))
-        if available_suits:
-            chosen_suit = random.choice(available_suits)
-            
-            # Encontrar todas as cartas do naipe escolhido
-            suit_cards = [carta for carta in baralho.cartas if carta.naipe == chosen_suit]
-            
-            # Se tivermos pelo menos 3 cartas do naipe escolhido, use-as
-            if len(suit_cards) >= 3:
-                # Remover estas cartas do baralho
-                for carta in suit_cards[:3]:
-                    baralho.cartas.remove(carta)
-                
-                # Adicionar à mão do bot
-                self.mao.extend(suit_cards[:3])
-                
-                # Marcar que temos uma flor
-                self.flor = True
-            else:
-                # Fallback: criação padrão de mão se não pudermos criar uma flor
-                print("Aviso: Não foi possível criar uma flor para o Bot, usando cartas aleatórias.")
-                for i in range(3):
-                    self.mao.append(baralho.retirarCarta())
-                self.flor = self.checaFlor()
-        else: """
         for i in range(3):
             self.mao.append(baralho.retirarCarta())
         self.flor = self.checaFlor()
@@ -69,7 +43,6 @@ class Bot():
         self.cartas_jogadas_humano = [0, 0, 0]
     
     def jogarCarta(self, cbr=None, controller=None):
-        #print("[DEBUG] Função jogarCarta chamada")
         if not self.mao:
             return None
         # Atualiza o modelo de registro antes de decidir a carta
@@ -84,7 +57,8 @@ class Bot():
         return carta_jogada
 
     def _decidir_carta_a_jogar(self, cbr=None, controller=None):
-        """Decide o índice da carta a ser jogada, usando CBR se possível, senão a menor carta."""
+        """Decide o índice da carta a ser jogada, usando CBR se possível, senão a menor carta.
+        Se a carta da maioria não estiver disponível, tenta a próxima (Alta > Media > Baixa)."""
         # Atualiza os índices se necessário
         if self.indices is None or len(self.indices) != len(self.mao):
             self.indices = list(range(len(self.mao)))
@@ -103,7 +77,6 @@ class Bot():
         if df.empty or ordem_carta_jogada not in df.columns:
             return self._indice_menor_carta()
 
-        # Verifica qual carta (alta, media, baixa) foi jogada pela maioria
         cartas_mao = {
             'Alta': self.modeloRegistro.cartaAltaRobo,
             'Media': self.modeloRegistro.cartaMediaRobo,
@@ -115,13 +88,17 @@ class Bot():
             for tipo, carta in cartas_mao.items():
                 if valor == carta:
                     counts[tipo] += 1
-        # Decide pela maioria
-        tipo_maioria = max(counts, key=counts.get)
-        carta_escolhida = cartas_mao[tipo_maioria]
-        # Se a carta escolhida não está mais na mão (já foi jogada), pega a menor
-        if carta_escolhida not in self.pontuacaoCartas:
-            return self._indice_menor_carta()
-        return self.pontuacaoCartas.index(carta_escolhida)
+        # Ordena as opções por maioria
+        opcoes_ordenadas = sorted(counts, key=counts.get, reverse=True)
+        # Tenta jogar a carta da maioria, se não estiver disponível tenta as próximas
+        for tipo in opcoes_ordenadas:
+            carta_escolhida = cartas_mao[tipo]
+            if carta_escolhida in self.pontuacaoCartas:
+                print(f"[DEBUG] Carta escolhida: {carta_escolhida} do tipo {tipo}")
+                return self.pontuacaoCartas.index(carta_escolhida)
+        # Se nenhuma das três está disponível, joga a menor carta
+        print(f"[DEBUG] Nenhuma das cartas da maioria disponível, jogando a menor carta.")
+        return self._indice_menor_carta()
 
     def _indice_menor_carta(self):
         """Retorna o índice da menor carta na mão atual."""

@@ -452,5 +452,4 @@ class GameController:
 
     def zerar_modelo_registro(self):
         """Reseta o modeloRegistro para o estado inicial."""
-        print("[DEBUG] Resetando modeloRegistro para o estado inicial.")
         self.modeloRegistro = ModeloRegistro()
