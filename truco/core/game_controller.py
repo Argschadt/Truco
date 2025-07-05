@@ -175,6 +175,29 @@ class GameController:
             self.pontos_truco = 4  # Vale Quatro
             self.quemValeQuatro = 1 if quem_pediu == self.jogador1 else 2
         self.ultimo_truco = quem_pediu
+        
+    
+    # Método considerando pontos para o tipo de truco negado
+        
+    #def aceitar_truco(self, aceitou):
+    #    # Se recusar, quem pediu ganha pontos baseados no nível do truco
+    #    if not aceitou:
+    #        self.historico_rodadas = []  # Limpa histórico para evitar pontos extras
+    #        pontos_ganhos = 1  # Padrão: Truco negado dá 1 ponto
+    #        if self.pontos_truco == 3:  # Retruco negado
+    #            pontos_ganhos = 2
+    #        elif self.pontos_truco == 4:  # Vale Quatro negado
+    #            pontos_ganhos = 3
+
+    #        if self.ultimo_truco == self.jogador1:
+    #            self.quemNegouTruco = 2  # Jogador 2 negou
+    #            calcular_pontuacao(self.jogador1, 'mao', pontos_ganhos)
+    #            return self.jogador1
+    #        else:
+    #            self.quemNegouTruco = 1  # Jogador 1 negou
+    #            calcular_pontuacao(self.jogador2, 'mao', pontos_ganhos)
+    #            return self.jogador2
+    #    return None
 
     def aceitar_truco(self, aceitou):
         # Se recusar, quem pediu ganha apenas 1 ponto (regra correta)
