@@ -203,12 +203,9 @@ class Bot():
         if cbr is not None:
             df = cbr.retornarSimilares(controller.modeloRegistro)
             if not df.empty:
-                # Considera apenas situações em que o bot pediu truco
-                df_filtrado = df[df['quemTruco'] == 1]
-                if not df_filtrado.empty:
-                    # Decisão pela maioria: verifica se a maioria ganhou o truco
-                    maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
-                    return maioria == 1
+                # Decisão pela maioria: verifica se a maioria ganhou o truco
+                maioria = df['quemGanhouTruco'].value_counts().idxmax()
+                return maioria == 1
         return False
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
@@ -216,21 +213,12 @@ class Bot():
         if cbr is not None:
             df = cbr.retornarSimilares(controller.modeloRegistro)
             if not df.empty:
-                if valor_truco == 2:
-                    df_filtrado = df[df['quemTruco'] == 2]
-                elif valor_truco == 3:
-                    df_filtrado = df[df['quemRetruco'] == 2]
-                elif valor_truco == 4:
-                    df_filtrado = df[df['quemValeQuatro'] == 2]
-                else:
-                    return False
-                if not df_filtrado.empty:
-                    quemMaisFugiuTruco = df_filtrado['quemNegouTruco'].value_counts().idxmax()
-                    quemGanhouMaisTruco = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
-                    if quemGanhouMaisTruco == 1:
-                        return True
-                    if quemMaisFugiuTruco == 2:
-                        return True
+                quemMaisFugiuTruco = df['quemNegouTruco'].value_counts().idxmax()
+                quemGanhouMaisTruco = df['quemGanhouTruco'].value_counts().idxmax()
+                if quemGanhouMaisTruco == 1:
+                    return True
+                if quemMaisFugiuTruco == 2:
+                    return True
         return False
 
     def pedir_envido(self, cbr=None, controller=None):

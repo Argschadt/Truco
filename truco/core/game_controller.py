@@ -507,56 +507,42 @@ class GameController:
         #self.printar_modelo_registro()
         
     def _atualizar_cartas_mao_robo(self):
-        """Método auxiliar para atualizar as cartas na mão do bot de forma mais robusta."""
-        # Resetar valores padrão
-        self.modeloRegistro.cartaAltaRobo = 0
-        self.modeloRegistro.cartaMediaRobo = 0
-        self.modeloRegistro.cartaBaixaRobo = 0
-        self.modeloRegistro.naipeCartaAltaRobo = 0
-        self.modeloRegistro.naipeCartaMediaRobo = 0
-        self.modeloRegistro.naipeCartaBaixaRobo = 0
-        
-        # Verificar se o jogador2 tem todos os atributos necessários
+        """Atualiza as cartas do robo APENAS se ainda não foram definidas (ou seja, só no início da mão)."""
+        # Só atualiza se todas as cartas ainda forem zero (não definidas)
+        if (
+            getattr(self.modeloRegistro, 'cartaAltaRobo', 0) != 0 or
+            getattr(self.modeloRegistro, 'cartaMediaRobo', 0) != 0 or
+            getattr(self.modeloRegistro, 'cartaBaixaRobo', 0) != 0
+        ):
+            return
+
         if not all(hasattr(self.jogador2, attr) for attr in ['pontuacaoCartas', 'mao', 'maoRank']):
             return
-            
-        # Verificar se as listas não estão vazias
         if not all([self.jogador2.pontuacaoCartas, self.jogador2.mao, self.jogador2.maoRank]):
             return
-            
-        # Verificar se as listas têm o mesmo tamanho
         if not (len(self.jogador2.pontuacaoCartas) == len(self.jogador2.mao) == len(self.jogador2.maoRank)):
             return
-            
         try:
             NAIPE_MAP = {"ESPADAS": 1, "OUROS": 2, "BASTOS": 3, "COPAS": 4}
-            
-            # Encontrar índices de forma mais segura
             idx_alta = self.jogador2.maoRank.index("Alta") if "Alta" in self.jogador2.maoRank else None
             idx_media = self.jogador2.maoRank.index("Media") if "Media" in self.jogador2.maoRank else None
             idx_baixa = self.jogador2.maoRank.index("Baixa") if "Baixa" in self.jogador2.maoRank else None
-            
-            # Atribuir valores apenas se os índices forem válidos
             if idx_alta is not None and idx_alta < len(self.jogador2.pontuacaoCartas):
                 self.modeloRegistro.cartaAltaRobo = self.jogador2.pontuacaoCartas[idx_alta]
                 if idx_alta < len(self.jogador2.mao):
                     naipe = self.jogador2.mao[idx_alta].retornarNaipe()
                     self.modeloRegistro.naipeCartaAltaRobo = NAIPE_MAP.get(naipe, 0)
-                    
             if idx_media is not None and idx_media < len(self.jogador2.pontuacaoCartas):
                 self.modeloRegistro.cartaMediaRobo = self.jogador2.pontuacaoCartas[idx_media]
                 if idx_media < len(self.jogador2.mao):
                     naipe = self.jogador2.mao[idx_media].retornarNaipe()
                     self.modeloRegistro.naipeCartaMediaRobo = NAIPE_MAP.get(naipe, 0)
-                    
             if idx_baixa is not None and idx_baixa < len(self.jogador2.pontuacaoCartas):
                 self.modeloRegistro.cartaBaixaRobo = self.jogador2.pontuacaoCartas[idx_baixa]
                 if idx_baixa < len(self.jogador2.mao):
                     naipe = self.jogador2.mao[idx_baixa].retornarNaipe()
                     self.modeloRegistro.naipeCartaBaixaRobo = NAIPE_MAP.get(naipe, 0)
-                    
         except (ValueError, IndexError, AttributeError) as e:
-            # Log do erro se necessário, mas continua com valores padrão
             print(f"[DEBUG] Erro ao atualizar cartas mão robo: {e}")
             pass
 
@@ -614,4 +600,19 @@ class GameController:
 
     def zerar_modelo_registro(self):
         """Reseta o modeloRegistro para o estado inicial."""
+        self.quemTruco = 0
+        self.quemNegouTruco = 0
+        self.quemGanhouTruco = 0
+        self.quemRetruco = 0
+        self.quemGanhouRetruco = 0
+        self.quemValeQuatro = 0
+        self.quemGanhouValeQuatro = 0
+        self.quemNegouEnvido = 0
+        self.quemGanhouEnvido = 0
+        self.quemPediuRealEnvido = 0
+        self.quemPediuFaltaEnvido = 0
+        self.quemFlor = 0
+        self.quemGanhouFlor = 0
+        self.quemContraFlor = 0
+        self.quemContraFlorResto = 0
         self.modeloRegistro = ModeloRegistro()
