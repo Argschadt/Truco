@@ -18,9 +18,6 @@ class Baralho():
     
     def embaralhar(self):
         random.shuffle(self.cartas)
-        print("[DEBUG] Cartas embaralhadas:")
-        for c in self.cartas:
-            print(f"  {c.numero} de {c.naipe}")
 
     def retirarCarta(self):
         return self.cartas.pop(0)
