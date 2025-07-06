@@ -111,7 +111,7 @@ class CbrUpdated():
 
     def retornarSimilares(self, registro):
         global_sim = self.global_similarity()
-        retriever = cbrkit.retrieval.build(global_sim, min_similarity=0.95)
+        retriever = cbrkit.retrieval.build(global_sim, limit=20, min_similarity=0.90)
         query = self.montar_query_do_registro(registro)
         if registro.jogadorMao == 1:
             self.gerarCaseBase_mao1()

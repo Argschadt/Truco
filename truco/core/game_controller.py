@@ -20,10 +20,21 @@ class GameController:
         self.historico_rodadas = []
         self.estado = 'inicio'
         # Novos atributos para rastrear estados do modeloRegistro
+        self.quemTruco = 0
         self.quemNegouTruco = 0
+        self.quemGanhouTruco = 0
+        self.quemRetruco = 0
         self.quemGanhouRetruco = 0
+        self.quemValeQuatro = 0
         self.quemGanhouValeQuatro = 0
         self.quemNegouEnvido = 0
+        self.quemGanhouEnvido = 0
+        self.quemPediuRealEnvido = 0
+        self.quemPediuFaltaEnvido = 0
+        self.quemFlor = 0
+        self.quemGanhouFlor = 0
+        self.quemContraFlor = 0
+        self.quemContraFlorResto = 0
         self.modeloRegistro = ModeloRegistro()
 
     def reiniciar_mao(self):
@@ -218,11 +229,11 @@ class GameController:
         self.envido_pedido = True
         self.ultimo_envido = quem_pediu
         if tp_envido == 1:  # Envido
-            self.modeloRegistro.quemPediuEnvido = 1 if quem_pediu == self.jogador1 else 2
+            self.modeloRegistro.quemPediuEnvido = 2 if quem_pediu == self.jogador1 else 1
         elif tp_envido == 2:  # Real Envido
-            self.modeloRegistro.quemPediuRealEnvido = 1 if quem_pediu == self.jogador1 else 2
+            self.modeloRegistro.quemPediuRealEnvido = 2 if quem_pediu == self.jogador1 else 1
         elif tp_envido == 3:  # Falta Envido
-            self.modeloRegistro.quemPediuFaltaEnvido = 1 if quem_pediu == self.jogador1 else 2
+            self.modeloRegistro.quemPediuFaltaEnvido = 2 if quem_pediu == self.jogador1 else 1
 
     def aceitar_envido(self, aceitou):
         if not aceitou:
@@ -240,7 +251,7 @@ class GameController:
     def recusar_envido(self, quem_pediu, tp_envido):
         """Registra recusa de envido."""
         self.envido_pedido = True
-        self.modeloRegistro.quemNegouEnvido = 1 if quem_pediu == self.jogador1 else 2
+        self.modeloRegistro.quemNegouEnvido = 2 if quem_pediu == self.jogador1 else 1
 
     def pedir_flor(self, quem_pediu):
         """Registra pedido de flor."""
@@ -321,40 +332,159 @@ class GameController:
             self.modeloRegistro.terceiraCartaHumano = cartas_humano[2] if len(cartas_humano) > 2 else 0
             
         # Rodadas - verificar se o histórico tem elementos suficientes
-        self.modeloRegistro.ganhadorPrimeiraRodada = self.historico_rodadas[0] if len(self.historico_rodadas) > 0 else 0
-        self.modeloRegistro.ganhadorSegundaRodada = self.historico_rodadas[1] if len(self.historico_rodadas) > 1 else 0
-        self.modeloRegistro.ganhadorTerceiraRodada = self.historico_rodadas[2] if len(self.historico_rodadas) > 2 else 0
+        if len(self.historico_rodadas) > 0:
+            if self.historico_rodadas[0] == 1:
+                self.modeloRegistro.ganhadorPrimeiraRodada = 2
+            elif self.historico_rodadas[0] == 2:
+                self.modeloRegistro.ganhadorPrimeiraRodada = 1
+        else:
+            self.modeloRegistro.ganhadorPrimeiraRodada = 0
+            
+        if len(self.historico_rodadas) > 1:
+            if self.historico_rodadas[1] == 1:
+                self.modeloRegistro.ganhadorSegundaRodada = 2
+            elif self.historico_rodadas[1] == 2:
+                self.modeloRegistro.ganhadorSegundaRodada = 1
+        else:
+            self.modeloRegistro.ganhadorSegundaRodada = 0
+            
+        if len(self.historico_rodadas) > 2:
+            if self.historico_rodadas[2] == 1:
+                self.modeloRegistro.ganhadorTerceiraRodada = 2
+            elif self.historico_rodadas[2] == 2:
+                self.modeloRegistro.ganhadorTerceiraRodada = 1
+        else:
+            self.modeloRegistro.ganhadorTerceiraRodada = 0
         
         # Truco - usar valores padrão se atributos não existirem
-        self.modeloRegistro.quemTruco = getattr(self, 'quemTruco', 0)
-        self.modeloRegistro.quemNegouTruco = getattr(self, 'quemNegouTruco', 0)
-        self.modeloRegistro.quemGanhouTruco = getattr(self, 'quemGanhouTruco', 0)
-        self.modeloRegistro.quemRetruco = getattr(self, 'quemRetruco', 0)
-        self.modeloRegistro.quemGanhouRetruco = getattr(self, 'quemGanhouRetruco', 0)
-        self.modeloRegistro.quemValeQuatro = getattr(self, 'quemValeQuatro', 0)
-        self.modeloRegistro.quemGanhouValeQuatro = getattr(self, 'quemGanhouValeQuatro', 0)
+        if (self.quemTruco == 1):
+            self.modeloRegistro.quemTruco = 2
+        elif (self.quemTruco == 2):
+            self.modeloRegistro.quemTruco = 1
+        else:
+            self.modeloRegistro.quemTruco = 0
+        
+        if (self.quemNegouTruco == 1):
+            self.modeloRegistro.quemNegouTruco = 2
+        elif (self.quemNegouTruco == 2):
+            self.modeloRegistro.quemNegouTruco = 1
+        else:
+            self.modeloRegistro.quemNegouTruco = 0
+        
+        if (self.quemGanhouTruco == 1):
+            self.modeloRegistro.quemGanhouTruco = 2
+        elif (self.quemGanhouTruco == 2):
+            self.modeloRegistro.quemGanhouTruco = 1
+        else:
+            self.modeloRegistro.quemGanhouTruco = 0
+            
+        if self.quemRetruco == 1:
+            self.modeloRegistro.quemRetruco = 2
+        elif self.quemRetruco == 2:
+            self.modeloRegistro.quemRetruco = 1
+        else:
+            self.modeloRegistro.quemRetruco = 0
+            
+        if self.quemGanhouRetruco == 1:
+            self.modeloRegistro.quemGanhouRetruco = 2
+        elif self.quemGanhouRetruco == 2:
+            self.modeloRegistro.quemGanhouRetruco = 1
+        else:
+            self.modeloRegistro.quemGanhouRetruco = 0
+            
+        if self.quemValeQuatro == 1:
+            self.modeloRegistro.quemValeQuatro = 2
+        elif self.quemValeQuatro == 2:
+            self.modeloRegistro.quemValeQuatro = 1
+        else:
+            self.modeloRegistro.quemValeQuatro = 0
+            
+        if self.quemGanhouValeQuatro == 1:
+            self.modeloRegistro.quemGanhouValeQuatro = 2
+        elif self.quemGanhouValeQuatro == 2:
+            self.modeloRegistro.quemGanhouValeQuatro = 1
+        else:
+            self.modeloRegistro.quemGanhouValeQuatro = 0
         
         # Envido 
         self.modeloRegistro.pontosEnvidoRobo = self.jogador2.calcular_pontos_envido()
+        
+        
+        if hasattr(self, 'ultimo_envido'):
+            if self.ultimo_envido == self.jogador1:
+                self.modeloRegistro.quemPediuEnvido = 2
+            elif self.ultimo_envido == self.jogador2:
+                self.modeloRegistro.quemPediuEnvido = 1
+            else:
+                self.modeloRegistro.quemPediuEnvido = 0
+        else:
+            self.modeloRegistro.quemPediuEnvido = 0
+        
+        if self.quemGanhouEnvido == 1:
+            self.modeloRegistro.quemGanhouEnvido = 2
+        elif self.quemGanhouEnvido == 2:
+            self.modeloRegistro.quemGanhouEnvido = 1
+        else:
+            self.modeloRegistro.quemGanhouEnvido = 0
             
-        self.modeloRegistro.quemPediuEnvido = 1 if getattr(self, 'ultimo_envido', None) == self.jogador1 else (2 if getattr(self, 'ultimo_envido', None) == self.jogador2 else 0)
-        self.modeloRegistro.quemGanhouEnvido = getattr(self, 'quemGanhouEnvido', 0)
-        self.modeloRegistro.quemNegouEnvido = getattr(self, 'quemNegouEnvido', 0)
-        self.modeloRegistro.quemPediuRealEnvido = getattr(self, 'quemPediuRealEnvido', 0)
-        self.modeloRegistro.quemPediuFaltaEnvido = getattr(self, 'quemPediuFaltaEnvido', 0)
+        if self.quemNegouEnvido == 1:
+            self.modeloRegistro.quemNegouEnvido = 2
+        elif self.quemNegouEnvido == 2:
+            self.modeloRegistro.quemNegouEnvido = 1
+        else:
+            self.modeloRegistro.quemNegouEnvido = 0
+        
+        if self.quemPediuRealEnvido == 1:
+            self.modeloRegistro.quemPediuRealEnvido = 2
+        elif self.quemPediuRealEnvido == 2:
+            self.modeloRegistro.quemPediuRealEnvido = 1
+        else:
+            self.modeloRegistro.quemPediuRealEnvido = 0
+        
+        if self.quemPediuFaltaEnvido == 1:
+            self.modeloRegistro.quemPediuFaltaEnvido = 2
+        elif self.quemPediuFaltaEnvido == 2:
+            self.modeloRegistro.quemPediuFaltaEnvido = 1
+        else:
+            self.modeloRegistro.quemPediuFaltaEnvido = 0
         
         # Flor
-        self.modeloRegistro.quemFlor = getattr(self, 'quemFlor', 0)
-        self.modeloRegistro.quemGanhouFlor = getattr(self, 'quemGanhouFlor', 0)
-        self.modeloRegistro.quemContraFlor = getattr(self, 'quemContraFlor', 0)
-        self.modeloRegistro.quemContraFlorResto = getattr(self, 'quemContraFlorResto', 0)
+        if self.quemFlor == 1:
+            self.modeloRegistro.quemFlor = 2
+        elif self.quemFlor == 2:
+            self.modeloRegistro.quemFlor = 1
+        else:
+            self.modeloRegistro.quemFlor = 0
+        if hasattr(self, 'quemGanhouFlor'):
+            if self.quemGanhouFlor == 1:
+                self.modeloRegistro.quemGanhouFlor = 2
+            elif self.quemGanhouFlor == 2:
+                self.modeloRegistro.quemGanhouFlor = 1
+            else:
+                self.modeloRegistro.quemGanhouFlor = 0
+        
+        if hasattr(self, 'quemContraFlor'):
+            if self.quemContraFlor == 1:
+                self.modeloRegistro.quemContraFlor = 2
+            elif self.quemContraFlor == 2:
+                self.modeloRegistro.quemContraFlor = 1
+            else:
+                self.modeloRegistro.quemContraFlor = 0
+        
+        if hasattr(self, 'quemContraFlorResto'):
+            if self.quemContraFlorResto == 1:
+                self.modeloRegistro.quemContraFlorResto = 2
+            elif self.quemContraFlorResto == 2:
+                self.modeloRegistro.quemContraFlorResto = 1
+            else:
+                self.modeloRegistro.quemContraFlorResto = 0
         
         # Cartas na mão do bot (robo) - verificação mais robusta
         self._atualizar_cartas_mao_robo()
         
         # Jogador Mao (quem é o primeiro) - melhor tratamento
         if hasattr(self, 'proximo_primeiro') and self.proximo_primeiro:
-            self.modeloRegistro.jogadorMao = 1 if self.proximo_primeiro == self.jogador1 else 2
+            self.modeloRegistro.jogadorMao = 2 if self.proximo_primeiro == self.jogador1 else 1
         else:
             # Valor padrão se não foi definido
             self.modeloRegistro.jogadorMao = 1

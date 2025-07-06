@@ -166,6 +166,11 @@ class Bot():
     
     def inicializarRegistro(self, controller=None):
         self.modeloRegistro.jogadorMao = 1 if controller and hasattr(controller, 'jogador_mao') else 2
+        if controller:
+            if controller.proximo_primeiro == controller.jogador1:
+                self.modeloRegistro.jogadorMao = 2
+            else:
+                self.modeloRegistro.jogadorMao = 1
         # Definir índices de Alta, Media e Baixa se existirem
         idx_alta = self.maoRank.index("Alta") if "Alta" in self.maoRank else None
         idx_media = self.maoRank.index("Media") if "Media" in self.maoRank else None
@@ -214,18 +219,41 @@ class Bot():
     def pedir_envido(self, cbr=None, controller=None):
         controller.atualizar_modelo_registro()
         df = cbr.retornarSimilares(controller.modeloRegistro)
-        df_filtrado = df[(df['quemPediuEnvido'] != 0)]
+        df_filtrado = df[(df['quemPediuEnvido'] == 1)]
         if not df_filtrado.empty:
-            quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
-            return quemMaisGanhouEnvido == 2
+            quemMaisNegouEnvido = df_filtrado['quemNegouEnvido'].value_counts().idxmax()
+            quemMaisChamouRealEnvido = df_filtrado['quemPediuRealEnvido'].value_counts().idxmax()
+            quemMaisChamouFaltaEnvido = df_filtrado['quemPediuFaltaEnvido'].value_counts().idxmax()
+            if quemMaisChamouRealEnvido == 2:
+                if quemMaisChamouFaltaEnvido == 1:
+                    return True
+                else:
+                    return False
+            elif quemMaisChamouFaltaEnvido == 2:
+                return False
+            else:
+                df_filtrado = df_filtrado[(df_filtrado['quemNegouEnvido'] == 0)]
+                quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
+                return quemMaisGanhouEnvido == 1
         
     def aceitar_envido(self, valor_envido, cbr=None, controller=None):
         controller.atualizar_modelo_registro()
         df = cbr.retornarSimilares(controller.modeloRegistro)
-        df_filtrado = df[(df['quemPediuEnvido'] != 0)]
+        df_filtrado = df[(df['quemPediuEnvido'] == 2)]
         if not df_filtrado.empty:
-            quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
-            return quemMaisGanhouEnvido == 2
+            quemMaisNegouEnvido = df_filtrado['quemNegouEnvido'].value_counts().idxmax()
+            quemMaisChamouRealEnvido = df_filtrado['quemPediuRealEnvido'].value_counts().idxmax()
+            quemMaisChamouFaltaEnvido = df_filtrado['quemPediuFaltaEnvido'].value_counts().idxmax()
+            if quemMaisNegouEnvido == 1:
+                return False
+            elif quemMaisChamouRealEnvido == 1:
+                return True
+            elif quemMaisChamouFaltaEnvido == 1:
+                return True
+            else:
+                df_filtrado = df_filtrado[(df_filtrado['quemNegouEnvido'] == 0)]
+                quemMaisGanhouEnvido = df_filtrado['quemGanhouEnvido'].value_counts().idxmax()
+                return quemMaisGanhouEnvido == 1
 
     def registrar_resultado_rodada(self, resultado, controller=None):
         self.rodadas += 1
