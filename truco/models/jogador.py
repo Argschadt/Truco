@@ -23,6 +23,7 @@ class Jogador():
         if ((len(self.mao)) == 3 and self.flor is False and (self.checaFlor())):
             print('[5] Flor')
             self.flor = True
+            
     def criarMao(self, baralho):
         """ # Ensure jogador1 (Heitor) always gets a "flor" (3 cards of the same suit)
         if self.nome == 'Heitor':
@@ -52,7 +53,10 @@ class Jogador():
             
         # Standard hand creation for other players or fallback
         for i in range(3):
-            self.mao.append(baralho.retirarCarta())
+            carta_original = baralho.retirarCarta()
+            carta_copia = carta_original.copiar()
+            self.mao.append(carta_copia)
+            
     def jogarCarta(self, carta_escolhida):
         return self.mao.pop(carta_escolhida)
     

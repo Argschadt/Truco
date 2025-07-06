@@ -19,7 +19,6 @@ HIERARQUIA_TRUCO_GAUCHO = [
 ]
 
 HIERARQUIA_MAPA = {nome.upper(): i for i, nome in enumerate(HIERARQUIA_TRUCO_GAUCHO)}
-
 MANILHA_UPPER = set(k.upper() for k in MANILHA.keys())
 
 def verificar_ganhador_rodada(carta1, carta2):
@@ -35,6 +34,8 @@ def verificar_ganhador_rodada(carta1, carta2):
 
     idx1 = HIERARQUIA_MAPA.get(nome1, 100)
     idx2 = HIERARQUIA_MAPA.get(nome2, 100)
+    
+    print(f"carta1.numero: {carta1.numero} ({type(carta1.numero)}), carta2.numero: {carta2.numero} ({type(carta2.numero)})")
 
     if idx1 < idx2:
         return carta1

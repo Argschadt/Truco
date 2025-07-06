@@ -4,6 +4,7 @@ from truco.utils.pontos import MANILHA, CARTAS_VALORES
 class Carta():
 
     def __init__(self, numero, naipe):
+        self.numero_original = numero
         self.numero = numero
         self.naipe = naipe
 
@@ -78,24 +79,27 @@ class Carta():
         return lista_pontos, lista_classificacao
 
     def printarCarta(self, i=None):
-        if i == None:
+        if i is None:
             i = ""
-        if self.numero == 1 and self.naipe == 'Espadas':
+        if self.numero_original == 1 and self.naipe == 'Espadas':
             print(f"[{i}] ESPADÃO +")
-        elif self.numero == 1 and self.naipe == 'Bastos':
+        elif self.numero_original == 1 and self.naipe == 'Bastos':
             print(f"[{i}] BASTIÃO +")
-        elif self.numero == 7 and self.naipe == 'Espadas':
+        elif self.numero_original == 7 and self.naipe == 'Espadas':
             print(f"[{i}] Sete de espadas +")
-        elif self.numero == 7 and self.naipe == 'Ouros':
+        elif self.numero_original == 7 and self.naipe == 'Ouros':
             print(f"[{i}] Sete de Ouros +")
         else:
-            print(f"[{i}] {self.numero} de {self.naipe}")
+            print(f"[{i}] {self.numero_original} de {self.naipe}")
 
     def retornarNumero(self):
         return self.numero
     
     def retornarNaipe(self):
         return self.naipe
+    
+    def copiar(self):
+        return Carta(self.numero, self.naipe)
 
     def desenharCarta(self, s):
         l_mostrar_carta = [] 
@@ -128,13 +132,13 @@ class Carta():
         return l_mostrar_carta
 
     def __str__(self):
-        if self.numero == 1 and self.naipe == 'Espadas':
+        if self.numero_original == 1 and self.naipe == 'Espadas':
             return "ESPADÃO +"
-        elif self.numero == 1 and self.naipe == 'Bastos':
+        elif self.numero_original == 1 and self.naipe == 'Bastos':
             return "BASTIÃO +"
-        elif self.numero == 7 and self.naipe == 'Espadas':
+        elif self.numero_original == 7 and self.naipe == 'Espadas':
             return "Sete de Espadas +"
-        elif self.numero == 7 and self.naipe == 'Ouros':
+        elif self.numero_original == 7 and self.naipe == 'Ouros':
             return "Sete de Ouros +"
         else:
-            return f"{self.numero} de {self.naipe}"
+            return f"{self.numero_original} de {self.naipe}"
