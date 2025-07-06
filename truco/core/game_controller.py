@@ -48,9 +48,24 @@ class GameController:
         self.jogo.resetarTrucoPontos()
         self.historico_rodadas = []
         self.resetar_apostas()  # Reset apostas e variáveis de truco/retruco
+        cartas_vistas = set()
+        for carta in self.jogador1.mao + self.jogador2.mao:
+            chave = f"{carta.numero}_{carta.naipe}"
+            if chave in cartas_vistas:
+                print(f"❌ CARTA DUPLICADA: {chave}")
+            else:
+                cartas_vistas.add(chave)
         
         # Inicializar arrays de cartas jogadas
         self.inicializar_arrays_cartas_jogadas()
+    
+    def verificar_cartas_duplicadas(self):
+        cartas_humano = [(c.numero, c.naipe) for c in self.jogador1.mao]
+        cartas_bot = [(c.numero, c.naipe) for c in self.jogador2.mao]
+        duplicadas = set(cartas_humano).intersection(cartas_bot)
+        if duplicadas:
+            print("⚠️ AVISO: CARTA DUPLICADA DETECTADA:", duplicadas)
+    
 
     def jogar_rodada(self, carta1, carta2, primeiro_jogador, segundo_jogador):
         """
@@ -190,39 +205,39 @@ class GameController:
     
     # Método considerando pontos para o tipo de truco negado
         
-    #def aceitar_truco(self, aceitou):
-    #    # Se recusar, quem pediu ganha pontos baseados no nível do truco
-    #    if not aceitou:
-    #        self.historico_rodadas = []  # Limpa histórico para evitar pontos extras
-    #        pontos_ganhos = 1  # Padrão: Truco negado dá 1 ponto
-    #        if self.pontos_truco == 3:  # Retruco negado
-    #            pontos_ganhos = 2
-    #        elif self.pontos_truco == 4:  # Vale Quatro negado
-    #            pontos_ganhos = 3
-
-    #        if self.ultimo_truco == self.jogador1:
-    #            self.quemNegouTruco = 2  # Jogador 2 negou
-    #            calcular_pontuacao(self.jogador1, 'mao', pontos_ganhos)
-    #            return self.jogador1
-    #        else:
-    #            self.quemNegouTruco = 1  # Jogador 1 negou
-    #            calcular_pontuacao(self.jogador2, 'mao', pontos_ganhos)
-    #            return self.jogador2
-    #    return None
-
     def aceitar_truco(self, aceitou):
-        # Se recusar, quem pediu ganha apenas 1 ponto (regra correta)
+        # Se recusar, quem pediu ganha pontos baseados no nível do truco
         if not aceitou:
             self.historico_rodadas = []  # Limpa histórico para evitar pontos extras
+            pontos_ganhos = 1  # Padrão: Truco negado dá 1 ponto
+            if self.pontos_truco == 3:  # Retruco negado
+                pontos_ganhos = 2
+            elif self.pontos_truco == 4:  # Vale Quatro negado
+                pontos_ganhos = 3
+
             if self.ultimo_truco == self.jogador1:
                 self.quemNegouTruco = 2  # Jogador 2 negou
-                calcular_pontuacao(self.jogador1, 'mao', 1)
+                calcular_pontuacao(self.jogador1, 'mao', pontos_ganhos)
                 return self.jogador1
             else:
                 self.quemNegouTruco = 1  # Jogador 1 negou
-                calcular_pontuacao(self.jogador2, 'mao', 1)
+                calcular_pontuacao(self.jogador2, 'mao', pontos_ganhos)
                 return self.jogador2
         return None
+
+    #def aceitar_truco(self, aceitou):
+    #    # Se recusar, quem pediu ganha apenas 1 ponto (regra correta)
+    #    if not aceitou:
+    #        self.historico_rodadas = []  # Limpa histórico para evitar pontos extras
+    #        if self.ultimo_truco == self.jogador1:
+    #            self.quemNegouTruco = 2  # Jogador 2 negou
+    #            calcular_pontuacao(self.jogador1, 'mao', 1)
+    #            return self.jogador1
+    #        else:
+    #            self.quemNegouTruco = 1  # Jogador 1 negou
+    #            calcular_pontuacao(self.jogador2, 'mao', 1)
+    #            return self.jogador2
+    #    return None
 
     def pedir_envido(self, quem_pediu, tp_envido):
         # Envido só pode ser pedido na primeira rodada

@@ -13,7 +13,7 @@ def jogar_carta_bot(jogador, cbr, controller):
 def registrar_jogada(controller, jogador, carta, rodada_num, humano=False):
     """Registra a jogada do jogador e atualiza o modelo de registro."""
     pontos = carta.retornarPontosCarta(carta)
-    print(f'\n{jogador.nome} jogou: {carta.numero} de {carta.naipe}')
+    print(f'\n{jogador.nome} jogou: {carta.numero} de {carta.naipe} (pontos: {pontos})')
     if humano:
         controller.registrar_carta_jogada(jogador, pontos, rodada_num)
     else:
@@ -161,7 +161,7 @@ def jogar_mao(controller, jogador_atual, jogador_oponente, primeiro_da_partida, 
                 break
             # usa helper para bot
             carta2 = jogar_carta_bot(jogador_oponente, controller.cbr, controller)
-            registrar_jogada(controller, jogador_oponente, carta1, rodada)
+            registrar_jogada(controller, jogador_oponente, carta2, rodada)
         # Avalia resultado da rodada
         ganhador_rodada, vencedor_mao = controller.jogar_rodada(carta1, carta2, jogador_atual, jogador_oponente)
         exibir_resultado_rodada(ganhador_rodada, jogador_atual, jogador_oponente, carta1, carta2)

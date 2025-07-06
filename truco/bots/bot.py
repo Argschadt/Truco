@@ -29,11 +29,14 @@ class Bot():
         self.modeloRegistro = ModeloRegistro()
         # Caminho absoluto para a raiz do projeto
         raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
+        
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
         for i in range(3):
-            self.mao.append(baralho.retirarCarta())
+            carta_original = baralho.retirarCarta()
+            carta_copia = carta_original.copiar()
+            self.mao.append(carta_copia)
         self.flor = self.checaFlor()
             
         self.pontuacaoCartas, self.maoRank = self.mao[0].classificarCarta(self.mao)
@@ -41,19 +44,33 @@ class Bot():
         self.inicializarRegistro(controller)
         self.cartas_jogadas_robo = [0, 0, 0]
         self.cartas_jogadas_humano = [0, 0, 0]
-    
+        
     def jogarCarta(self, cbr=None, controller=None):
         if not self.mao:
             return None
+
         # Atualiza o modelo de registro antes de decidir a carta
         if controller:
             controller.atualizar_modelo_registro()
+
+        # Mostra a mão atual do bot antes de decidir a carta
+        print(f"\n[DEBUG] Mão atual do Bot ({self.nome}):")
+        for idx, carta in enumerate(self.mao):
+            print(f"  [{idx}] {carta} (numero={carta.numero}, naipe={carta.naipe})")
+
         # Decide qual carta jogar
         carta_idx = self._decidir_carta_a_jogar(cbr, controller)
+        print(f"[DEBUG] Índice escolhido para jogar: {carta_idx}")
+
         carta_jogada = self._remover_carta_da_mao(carta_idx)
+
+        if carta_jogada:
+            print(f"[DEBUG] Bot jogou: {carta_jogada} (numero={carta_jogada.numero}, naipe={carta_jogada.naipe})")
+
         # Atualiza o modelo de registro após jogar a carta
         if controller and carta_jogada:
             controller.atualizar_modelo_registro()
+
         return carta_jogada
 
     def _decidir_carta_a_jogar(self, cbr=None, controller=None):
