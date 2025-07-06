@@ -208,7 +208,7 @@ class Bot():
                 if not df_filtrado.empty:
                     # Decisão pela maioria: verifica se a maioria ganhou o truco
                     maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
-                    return maioria == 2
+                    return maioria == 1
         return False
 
     def aceitar_truco(self, valor_truco, cbr=None, controller=None):
@@ -225,8 +225,12 @@ class Bot():
                 else:
                     return False
                 if not df_filtrado.empty:
-                    maioria = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
-                    return maioria == 2
+                    quemMaisFugiuTruco = df_filtrado['quemNegouTruco'].value_counts().idxmax()
+                    quemGanhouMaisTruco = df_filtrado['quemGanhouTruco'].value_counts().idxmax()
+                    if quemGanhouMaisTruco == 1:
+                        return True
+                    if quemMaisFugiuTruco == 2:
+                        return True
         return False
 
     def pedir_envido(self, cbr=None, controller=None):
@@ -292,8 +296,13 @@ class Bot():
             if len(valores) >= 2:
                 valores = sorted(valores, reverse=True)
                 max_envido = max(max_envido, 20 + valores[0] + valores[1])
+        # Corrige erro se não houver cartas
+        todos_valores = [v for sub in naipes.values() for v in sub]
         if max_envido == 0:
-            max_envido = max([v for sub in naipes.values() for v in sub])
+            if todos_valores:
+                max_envido = max(todos_valores)
+            else:
+                max_envido = 0
         return max_envido
 
     def pedir_flor(self, cbr=None, controller=None):
