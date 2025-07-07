@@ -1,3 +1,52 @@
+## Inteligência Artificial: CBR (Case-Based Reasoning)
+
+### Como funciona o `cbr_updated.py`
+
+O arquivo `truco/bots/cbr_updated.py` implementa um bot avançado baseado em Case-Based Reasoning (CBR) para tomada de decisão no Truco Gaúcho. O CBR utiliza um histórico de partidas reais (armazenado em arquivos CSV) para buscar situações semelhantes à atual e sugerir a melhor jogada para o robô.
+
+**Principais etapas do funcionamento:**
+
+1. **Base de Casos:**
+   - O bot carrega bancos de dados (`dbtrucoimitacao_maos.csv`, `dbtrucoimitacao_maos_cbrkit_jogadorMao_1.csv`, `dbtrucoimitacao_maos_cbrkit_jogadorMao_2.csv`) contendo registros detalhados de mãos jogadas, com informações sobre cartas, ações e resultados.
+
+2. **Montagem da Query:**
+   - Para cada jogada, o estado atual do jogo é convertido em um dicionário (query) contendo apenas os campos relevantes (ex: cartas na mão, quem pediu truco, resultados anteriores, etc).
+
+3. **Busca de Casos Similares:**
+   - Utiliza o pacote `cbrkit` para comparar a situação atual com todas as situações do banco de dados, usando funções de similaridade para cada atributo (igualdade, distância linear, etc).
+   - Apenas casos com similaridade acima de um limiar (ex: 80%) são considerados.
+
+4. **Decisão:**
+   - O bot analisa as jogadas realizadas nos casos mais similares e escolhe a ação mais frequente ou mais bem-sucedida.
+
+5. **Atualização Dinâmica:**
+   - O bot filtra a base de casos conforme o jogador da vez (jogadorMao 1 ou 2) para garantir decisões contextualizadas.
+
+**Funções principais do `cbr_updated.py`:**
+
+- `montar_query_do_registro(registro)`: Monta a query a partir do estado atual.
+- `gerar_novo_CSV()`: Carrega e prepara o DataFrame de casos.
+- `gerarCaseBase_mao1()` / `gerarCaseBase_mao2()`: Filtra a base de casos para o jogador da vez.
+- `retornarSimilares(registro)`: Busca e retorna os casos mais similares usando o cbrkit.
+- `global_similarity()`: Define a função de similaridade global para comparar situações.
+
+### Sobre o pacote `cbrkit`
+
+O `cbrkit` é uma biblioteca Python para sistemas de Case-Based Reasoning. No contexto deste projeto, ele é usado para:
+
+- **Carregar bases de casos:**
+  - `cbrkit.loaders.file(path)`: Carrega um arquivo CSV como base de casos.
+- **Definir funções de similaridade:**
+  - `cbrkit.sim.attribute_value(...)`: Cria uma função de similaridade baseada em atributos, podendo usar igualdade, distância linear, etc.
+  - `cbrkit.sim.generic.equality()`: Similaridade por igualdade exata.
+  - `cbrkit.sim.numbers.linear(min, max)`: Similaridade linear para atributos numéricos.
+  - `cbrkit.sim.aggregator("mean")`: Agregador de similaridade (média dos atributos).
+- **Recuperar casos similares:**
+  - `cbrkit.retrieval.build(sim_fn, min_similarity)`: Cria um objeto de busca com função de similaridade e limiar mínimo.
+  - `cbrkit.retrieval.apply(casebase, query, retriever)`: Busca os casos mais similares à query na base de casos.
+
+**Resumo:**
+O bot CBR aprende com partidas anteriores, busca situações parecidas e toma decisões baseadas em experiência real, tornando o jogo mais desafiador e realista.
 # Truco Gaudério
 
  ### Jogo Truco em Python
