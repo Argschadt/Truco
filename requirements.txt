@@ -1,2 +1,3 @@
-scikit-learn
+cbrkit
 pandas
+scikit-learn
