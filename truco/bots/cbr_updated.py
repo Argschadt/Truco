@@ -125,7 +125,7 @@ class CbrUpdated():
         df_final = pd.DataFrame(casos)
         pd.set_option('display.max_columns', 50)
         pd.set_option('display.width', 10000)   
-        #print(df_final.head(20))
+        print(df_final.head(20))
         return df_final
 
     def global_similarity(self):
