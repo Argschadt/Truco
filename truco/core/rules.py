@@ -44,13 +44,13 @@ def verificar_ganhador_rodada(carta1, carta2):
     
 
 def calcular_pontuacao(jogador, tipo_ponto, valor=1):
-    # Exemplo: tipo_ponto pode ser 'rodada', 'truco', 'envido', etc.
+    # tipo_ponto pode ser 'rodada', 'truco', 'envido', etc.
     jogador.pontos += valor
 
 def validar_truco(estado_jogo, quem_pediu):
-    # Em breve: lógica para validar pedido de truco
+    # lógica para validar pedido de truco
     pass
 
 def validar_envido(estado_jogo, quem_pediu):
-    # Em breve: lógica para validar pedido de envido
+    # lógica para validar pedido de envido
     pass

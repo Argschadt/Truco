@@ -57,7 +57,7 @@ class CbrUpdated():
         registro_dict = registro.to_dict()
         # Só adiciona campo se valor for diferente de 0
         query = {campo: valor for campo, valor in ((campo, registro_dict.get(campo, 0)) for campo in CAMPOS_NECESSARIOS) if valor != 0}
-        print("\nQuery montada:", query, "\n")
+        #print("\nQuery montada:", query, "\n")
         return query
     
     def gerar_novo_CSV(self):
@@ -124,7 +124,7 @@ class CbrUpdated():
         casos = [row[0] for _, row in df_trad.iterrows()]
         df_final = pd.DataFrame(casos)
         pd.set_option('display.max_columns', 50)
-        pd.set_option('display.width', 10000)      # Set a large enough width to prevent wrapping
+        pd.set_option('display.width', 10000)   
         #print(df_final.head(20))
         return df_final
 

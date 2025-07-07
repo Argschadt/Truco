@@ -6,6 +6,7 @@ from truco.bots.cbr_updated import CbrUpdated
 from truco.core.rules import verificar_ganhador_rodada, calcular_pontuacao
 from truco.models.modelo_registro import ModeloRegistro
 
+# Controlador principal do jogo
 class GameController:
     def __init__(self, jogador1_nome, jogador2_nome, bot=True):
         self.baralho = Baralho()
@@ -52,7 +53,7 @@ class GameController:
         for carta in self.jogador1.mao + self.jogador2.mao:
             chave = f"{carta.numero}_{carta.naipe}"
             if chave in cartas_vistas:
-                print(f"❌ CARTA DUPLICADA: {chave}")
+                print(f" CARTA DUPLICADA: {chave}")
             else:
                 cartas_vistas.add(chave)
         
@@ -64,7 +65,7 @@ class GameController:
         cartas_bot = [(c.numero, c.naipe) for c in self.jogador2.mao]
         duplicadas = set(cartas_humano).intersection(cartas_bot)
         if duplicadas:
-            print("⚠️ AVISO: CARTA DUPLICADA DETECTADA:", duplicadas)
+            print(" AVISO: CARTA DUPLICADA:", duplicadas)
     
 
     def jogar_rodada(self, carta1, carta2, primeiro_jogador, segundo_jogador):
@@ -202,7 +203,6 @@ class GameController:
             self.quemValeQuatro = 1 if quem_pediu == self.jogador1 else 2
         self.ultimo_truco = quem_pediu
         
-    
     # Método considerando pontos para o tipo de truco negado
         
     def aceitar_truco(self, aceitou):

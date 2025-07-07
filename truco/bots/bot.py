@@ -30,6 +30,7 @@ class Bot():
         # Caminho absoluto para a raiz do projeto
         raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))    
         
+    # Cria a mão do bot com 3 cartas retiradas do baralho, verifica se tem Flor e inicializa o registro do modelo.    
     def criarMao(self, baralho, controller=None):
         self.indices = [0, 1, 2]
         
@@ -73,6 +74,7 @@ class Bot():
         if not self.mao:
             return None
         df = cbr.retornarSimilares(controller.modeloRegistro)
+        
         ordem_carta_jogada = 'CartaRobo'
         if self.indices is not None and len(self.indices) == 3:
             ordem_carta_jogada = 'primeira' + ordem_carta_jogada
@@ -131,7 +133,7 @@ class Bot():
         self.indices = list(range(len(self.mao)))
         return carta_jogada
 
-
+    # Ajusta os índices da mão de acordo com o tamanho da mão
     def AjustaIndicesMao(self, tam_mao):
         if(tam_mao) == 2:
             return [0, 1]
@@ -144,7 +146,6 @@ class Bot():
         for carta in self.mao:
             carta.printarCarta(i)
             i += 1
-        
 
     def adicionarPonto(self, valor=1):
         self.pontos += valor
@@ -153,7 +154,7 @@ class Bot():
         self.rodadas += rodadas
     
     def resetar(self):
-        # NÃO zera os pontos!
+        # Não zera os pontos
         self.mao = []
         self.flor = False
         self.pediuTruco = False
