@@ -1,3 +1,4 @@
+# Projeto desenvolvido por: Heitor Argenta Preigschadt e Eduardo Spat Schwingel
 ## Inteligência Artificial: CBR (Case-Based Reasoning)
 
 ### Como funciona o `cbr_updated.py`
